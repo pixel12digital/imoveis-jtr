@@ -1,0 +1,242 @@
+<?php
+/**
+ * Configuração de Caminhos - JTR Imóveis
+ * Centraliza todas as definições de paths para funcionar em qualquer ambiente
+ */
+
+// Definir constantes de caminho
+define('ROOT_PATH', dirname(__DIR__));
+define('CONFIG_PATH', ROOT_PATH . '/config');
+define('INCLUDES_PATH', ROOT_PATH . '/includes');
+define('PAGES_PATH', ROOT_PATH . '/pages');
+define('ADMIN_PATH', ROOT_PATH . '/admin');
+define('ASSETS_PATH', ROOT_PATH . '/assets');
+define('UPLOADS_PATH', ROOT_PATH . '/uploads');
+define('DATABASE_PATH', ROOT_PATH . '/database');
+
+// Função para obter caminho absoluto
+function getAbsolutePath($relativePath = '') {
+    return ROOT_PATH . '/' . ltrim($relativePath, '/');
+}
+
+// Função para obter caminho relativo à raiz do site
+function getRelativePath($path = '') {
+    $script_name = $_SERVER['SCRIPT_NAME'];
+    $path_info = pathinfo($script_name);
+    $base_path = $path_info['dirname'];
+    
+    // Detectar se estamos em uma subpágina (como pages/, admin/, etc.)
+    $is_subpage = false;
+    
+    // Verificar se estamos em uma subpágina
+    if (strpos($script_name, '/pages/') !== false) {
+        $is_subpage = true;
+    } elseif (strpos($script_name, '/admin/') !== false) {
+        $is_subpage = true;
+    }
+    
+    // Se estiver na raiz, retorna apenas o path
+    if ($base_path === '/') {
+        return '/' . ltrim($path, '/');
+    }
+    
+    // Se estivermos em uma subpágina, precisamos voltar um nível
+    if ($is_subpage) {
+        // Para assets, sempre voltar um nível
+        if (strpos($path, 'assets/') === 0) {
+            return '../' . $path;
+        }
+        // Para outros caminhos, usar lógica normal
+        return $base_path . '/' . ltrim($path, '/');
+    }
+    
+    return $base_path . '/' . ltrim($path, '/');
+}
+
+// Função para obter URL base
+function getBaseUrl() {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    $script_name = $_SERVER['SCRIPT_NAME'];
+    $path_info = pathinfo($script_name);
+    $base_path = $path_info['dirname'];
+    
+    // Detectar se estamos em uma subpágina
+    $is_subpage = false;
+    if (strpos($script_name, '/pages/') !== false || strpos($script_name, '/admin/') !== false) {
+        $is_subpage = true;
+    }
+    
+    // Se estiver na raiz, retorna apenas o protocolo + host
+    if ($base_path === '/') {
+        return $protocol . '://' . $host;
+    }
+    
+    // Se estivermos em uma subpágina, voltar um nível
+    if ($is_subpage) {
+        $path_parts = explode('/', trim($base_path, '/'));
+        if (count($path_parts) > 1) {
+            array_pop($path_parts); // Remove o último elemento (pages ou admin)
+            $corrected_base = '/' . implode('/', $path_parts);
+            return $protocol . '://' . $host . $corrected_base;
+        }
+    }
+    
+    return $protocol . '://' . $host . $base_path;
+}
+
+// Função para obter caminho de assets
+function getAssetPath($assetPath) {
+    $path = getRelativePath('assets/' . ltrim($assetPath, '/'));
+    
+    // Debug: log do caminho gerado (apenas em desenvolvimento)
+    if (isDevelopment() && isDebugMode()) {
+        error_log('[JTR Imóveis] Asset path: ' . $assetPath . ' -> ' . $path);
+    }
+    
+    return $path;
+}
+
+// Função para debug de caminhos
+function debugPaths() {
+    if (!isDevelopment()) {
+        return false;
+    }
+    
+    $script_name = $_SERVER['SCRIPT_NAME'];
+    $path_info = pathinfo($script_name);
+    $base_path = $path_info['dirname'];
+    
+    $debug_info = [
+        'script_name' => $script_name,
+        'base_path' => $base_path,
+        'is_subpage' => strpos($script_name, '/pages/') !== false || strpos($script_name, '/admin/') !== false,
+        'asset_path_css' => getAssetPath('css/style.css'),
+        'asset_path_js' => getAssetPath('js/main.js'),
+        'relative_path' => getRelativePath(),
+        'base_url' => getBaseUrl()
+    ];
+    
+    return $debug_info;
+}
+
+// Função para obter caminho de uploads
+function getUploadPath($filename) {
+    if (empty($filename)) {
+        return false;
+    }
+    
+    $absolutePath = getAbsolutePath('uploads/' . ltrim($filename, '/'));
+    if (file_exists($absolutePath)) {
+        return getRelativePath('uploads/' . ltrim($filename, '/'));
+    }
+    
+    return false; // Retorna false se a imagem não existir
+}
+
+// Função para verificar se uma imagem existe
+function imageExists($filename) {
+    if (empty($filename)) {
+        return false;
+    }
+    
+    $absolutePath = getAbsolutePath('uploads/' . ltrim($filename, '/'));
+    return file_exists($absolutePath);
+}
+
+// Função para obter caminho de páginas
+function getPagePath($page, $params = []) {
+    // Mapear páginas para arquivos corretos
+    $page_mapping = [
+        'imovel' => 'imovel-detalhes',
+        'home' => 'home',
+        'imoveis' => 'imoveis',
+        'sobre' => 'sobre',
+        'contato' => 'contato',
+        'admin' => 'admin',
+        'comparador' => 'comparador',
+        'historico-precos' => 'historico-precos',
+        'filtros-avancados' => 'filtros-avancados'
+    ];
+    
+    // Obter o nome correto da página
+    $correct_page = $page_mapping[$page] ?? $page;
+    
+    // Se estamos em uma subpágina (pages/, admin/), usar caminho direto
+    $script_name = $_SERVER['SCRIPT_NAME'];
+    if (strpos($script_name, '/pages/') !== false || strpos($script_name, '/admin/') !== false) {
+        // Estamos em uma subpágina, usar caminho relativo
+        if ($page === 'imovel') {
+            // Para imóveis, usar caminho direto para imovel-detalhes.php
+            $query = http_build_query($params);
+            $url = 'imovel-detalhes.php';
+            if (!empty($query)) {
+                $url .= '?' . $query;
+            }
+            return $url;
+        } else {
+            // Para outras páginas, voltar um nível e usar o sistema de roteamento
+            $query = http_build_query($params);
+            $url = '../index.php?page=' . $correct_page;
+            if (!empty($query)) {
+                $url .= '&' . $query;
+            }
+            return $url;
+        }
+    } else {
+        // Estamos na raiz, usar o sistema de roteamento normal
+        $query = http_build_query($params);
+        $url = 'index.php?page=' . $correct_page;
+        if (!empty($query)) {
+            $url .= '&' . $query;
+        }
+        return $url;
+    }
+}
+
+// Função para verificar se o arquivo existe
+function fileExists($path) {
+    return file_exists(getAbsolutePath($path));
+}
+
+// Função para incluir arquivo com caminho absoluto
+function includeFile($relativePath) {
+    $absolutePath = getAbsolutePath($relativePath);
+    if (file_exists($absolutePath)) {
+        return include $absolutePath;
+    }
+    return false;
+}
+
+// Função para verificar ambiente
+function isDevelopment() {
+    return in_array($_SERVER['HTTP_HOST'], ['localhost', '127.0.0.1', '::1']) || 
+           strpos($_SERVER['HTTP_HOST'], '.local') !== false ||
+           strpos($_SERVER['HTTP_HOST'], '.test') !== false;
+}
+
+// Função para obter configuração de debug
+function isDebugMode() {
+    return isDevelopment() && (isset($_GET['debug']) || isset($_COOKIE['debug_mode']));
+}
+
+// Função para log de erros (apenas em desenvolvimento)
+function logError($message, $context = []) {
+    if (isDevelopment()) {
+        error_log('[JTR Imóveis] ' . $message . ' ' . json_encode($context));
+    }
+}
+
+// Função para obter informações do ambiente
+function getEnvironmentInfo() {
+    return [
+        'is_development' => isDevelopment(),
+        'is_debug' => isDebugMode(),
+        'root_path' => ROOT_PATH,
+        'base_url' => getBaseUrl(),
+        'relative_path' => getRelativePath(),
+        'php_version' => PHP_VERSION,
+        'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown'
+    ];
+}
+?>
