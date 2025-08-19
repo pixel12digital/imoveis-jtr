@@ -4,8 +4,33 @@
  * Centraliza todas as definições de paths para funcionar em qualquer ambiente
  */
 
-// Definir constantes de caminho
-define('ROOT_PATH', dirname(__DIR__));
+// Detectar o caminho raiz de forma mais robusta
+function detectRootPath() {
+    // Tentar diferentes métodos para detectar o caminho raiz
+    $possible_paths = [
+        // Método 1: Usar SCRIPT_NAME (mais confiável)
+        dirname($_SERVER['SCRIPT_NAME']),
+        // Método 2: Usar REQUEST_URI
+        dirname($_SERVER['REQUEST_URI']),
+        // Método 3: Usar PHP_SELF
+        dirname($_SERVER['PHP_SELF']),
+        // Método 4: Fallback para diretório atual
+        '.'
+    ];
+    
+    foreach ($possible_paths as $path) {
+        if ($path && $path !== '.' && $path !== '/') {
+            return $path;
+        }
+    }
+    
+    // Se nada funcionar, usar diretório atual
+    return '.';
+}
+
+// Definir constantes de caminho de forma relativa
+$root_path = detectRootPath();
+define('ROOT_PATH', $root_path);
 define('CONFIG_PATH', ROOT_PATH . '/config');
 define('INCLUDES_PATH', ROOT_PATH . '/includes');
 define('PAGES_PATH', ROOT_PATH . '/pages');
@@ -14,9 +39,17 @@ define('ASSETS_PATH', ROOT_PATH . '/assets');
 define('UPLOADS_PATH', ROOT_PATH . '/uploads');
 define('DATABASE_PATH', ROOT_PATH . '/database');
 
-// Função para obter caminho absoluto
+// Função para obter caminho absoluto (usar com cuidado)
 function getAbsolutePath($relativePath = '') {
-    return ROOT_PATH . '/' . ltrim($relativePath, '/');
+    // Em produção, preferir caminhos relativos
+    if (!isDevelopment()) {
+        return ROOT_PATH . '/' . ltrim($relativePath, '/');
+    }
+    
+    // Em desenvolvimento, usar caminho absoluto do sistema
+    $current_dir = __DIR__;
+    $parent_dir = dirname($current_dir);
+    return $parent_dir . '/' . ltrim($relativePath, '/');
 }
 
 // Função para obter caminho relativo à raiz do site
@@ -201,6 +234,19 @@ function fileExists($path) {
 
 // Função para incluir arquivo com caminho absoluto
 function includeFile($relativePath) {
+    // Em produção, usar caminhos relativos
+    if (!isDevelopment()) {
+        $filePath = ROOT_PATH . '/' . ltrim($relativePath, '/');
+        if (file_exists($filePath)) {
+            // Usar require para garantir que as variáveis sejam passadas corretamente
+            // E garantir que as variáveis globais sejam acessíveis
+            global $pdo;
+            return require $filePath;
+        }
+        return false;
+    }
+    
+    // Em desenvolvimento, usar caminho absoluto
     $absolutePath = getAbsolutePath($relativePath);
     if (file_exists($absolutePath)) {
         // Usar require para garantir que as variáveis sejam passadas corretamente
