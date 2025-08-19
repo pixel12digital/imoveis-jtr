@@ -49,6 +49,7 @@ if (isset($_POST['toggle_status']) && isset($_POST['contact_id'])) {
 // Buscar contatos
 $search = isset($_GET['search']) ? cleanInput($_GET['search']) : '';
 $status_filter = isset($_GET['status']) ? cleanInput($_GET['status']) : '';
+$tipo_filter = isset($_GET['tipo']) ? cleanInput($_GET['tipo']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $per_page = 20;
 $offset = ($page - 1) * $per_page;
@@ -56,7 +57,7 @@ $offset = ($page - 1) * $per_page;
 $where_clause = '';
 $params = [];
 
-if ($search || $status_filter) {
+if ($search || $status_filter || $tipo_filter) {
     $conditions = [];
     
     if ($search) {
@@ -67,6 +68,11 @@ if ($search || $status_filter) {
     if ($status_filter) {
         $conditions[] = "status = ?";
         $params[] = $status_filter;
+    }
+    
+    if ($tipo_filter) {
+        $conditions[] = "tipo_operacao = ?";
+        $params[] = $tipo_filter;
     }
     
     $where_clause = "WHERE " . implode(' AND ', $conditions);
@@ -81,7 +87,7 @@ $total_contacts = $count_stmt->fetch()['total'];
 $total_pages = ceil($total_contacts / $per_page);
 
 // Buscar contatos com paginação
-$sql = "SELECT id, nome, email, telefone, assunto, mensagem, status, data_envio FROM contatos " . $where_clause . " ORDER BY data_envio DESC LIMIT ? OFFSET ?";
+$sql = "SELECT id, nome, email, telefone, assunto, tipo_operacao, mensagem, status, data_envio FROM contatos " . $where_clause . " ORDER BY data_envio DESC LIMIT ? OFFSET ?";
 $params[] = $per_page;
 $params[] = $offset;
 
@@ -259,6 +265,76 @@ $stats = $stats_stmt->fetch();
                     </div>
                 </div>
 
+                <!-- Estatísticas por Tipo -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="mb-0">
+                                            <?php 
+                                            $vendas_sql = "SELECT COUNT(*) as total FROM contatos WHERE tipo_operacao = 'venda'";
+                                            $vendas_stmt = $pdo->prepare($vendas_sql);
+                                            $vendas_stmt->execute();
+                                            echo $vendas_stmt->fetch()['total'];
+                                            ?>
+                                        </h4>
+                                        <small>Contatos de Venda</small>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-home fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="mb-0">
+                                            <?php 
+                                            $locacoes_sql = "SELECT COUNT(*) as total FROM contatos WHERE tipo_operacao = 'locacao'";
+                                            $locacoes_stmt = $pdo->prepare($locacoes_sql);
+                                            $locacoes_stmt->execute();
+                                            echo $locacoes_stmt->fetch()['total'];
+                                            ?>
+                                        </h4>
+                                        <small>Contatos de Locação</small>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-key fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 class="mb-0">
+                                            <?php 
+                                            $outros_sql = "SELECT COUNT(*) as total FROM contatos WHERE tipo_operacao = 'outros' OR tipo_operacao IS NULL";
+                                            $outros_stmt = $pdo->prepare($outros_sql);
+                                            $outros_stmt->execute();
+                                            echo $outros_stmt->fetch()['total'];
+                                            ?>
+                                        </h4>
+                                        <small>Outros Contatos</small>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-question fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Filtros e Busca -->
                 <div class="row mb-3">
                     <div class="col-md-8">
@@ -266,14 +342,22 @@ $stats = $stats_stmt->fetch();
                             <div class="col-md-6">
                                 <input type="text" name="search" class="form-control" placeholder="Buscar por nome, email, telefone ou mensagem..." value="<?php echo htmlspecialchars($search); ?>">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select name="status" class="form-select">
                                     <option value="">Todos os Status</option>
                                     <option value="nao_lido" <?php echo $status_filter === 'nao_lido' ? 'selected' : ''; ?>>Não Lidos</option>
                                     <option value="lido" <?php echo $status_filter === 'lido' ? 'selected' : ''; ?>>Lidos</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <select name="tipo" class="form-select">
+                                    <option value="">Todos os Tipos</option>
+                                    <option value="venda" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'venda') ? 'selected' : ''; ?>>Venda</option>
+                                    <option value="locacao" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'locacao') ? 'selected' : ''; ?>>Locação</option>
+                                    <option value="outros" <?php echo (isset($_GET['tipo']) && $_GET['tipo'] === 'outros') ? 'selected' : ''; ?>>Outros</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <button type="submit" class="btn btn-outline-secondary w-100">
                                     <i class="fas fa-search me-2"></i>
                                     Filtrar
@@ -298,6 +382,7 @@ $stats = $stats_stmt->fetch();
                                 <th>Email</th>
                                 <th>Telefone</th>
                                 <th>Assunto</th>
+                                <th>Tipo</th>
                                 <th>Status</th>
                                 <th>Data Envio</th>
                                 <th>Ações</th>
@@ -306,7 +391,7 @@ $stats = $stats_stmt->fetch();
                         <tbody>
                             <?php if (empty($contatos)): ?>
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted">
+                                    <td colspan="9" class="text-center text-muted">
                                         <i class="fas fa-info-circle me-2"></i>
                                         Nenhum contato encontrado.
                                     </td>
@@ -325,6 +410,28 @@ $stats = $stats_stmt->fetch();
                                                 <span title="<?php echo htmlspecialchars($contato['assunto']); ?>">
                                                     <?php echo strlen($contato['assunto']) > 30 ? substr(htmlspecialchars($contato['assunto']), 0, 30) . '...' : htmlspecialchars($contato['assunto']); ?>
                                                 </span>
+                                            <?php else: ?>
+                                                <span class="text-muted">-</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($contato['tipo_operacao']): ?>
+                                                <?php if ($contato['tipo_operacao'] === 'venda'): ?>
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-home me-1"></i>
+                                                        Venda
+                                                    </span>
+                                                <?php elseif ($contato['tipo_operacao'] === 'locacao'): ?>
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-key me-1"></i>
+                                                        Locação
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-question me-1"></i>
+                                                        Outros
+                                                    </span>
+                                                <?php endif; ?>
                                             <?php else: ?>
                                                 <span class="text-muted">-</span>
                                             <?php endif; ?>
@@ -378,7 +485,7 @@ $stats = $stats_stmt->fetch();
                         <ul class="pagination justify-content-center">
                             <?php if ($page > 1): ?>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>">
+                                    <a class="page-link" href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&tipo=<?php echo urlencode($tipo_filter); ?>">
                                         <i class="fas fa-chevron-left"></i>
                                     </a>
                                 </li>
@@ -386,7 +493,7 @@ $stats = $stats_stmt->fetch();
 
                             <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
                                 <li class="page-item <?php echo $i === $page ? 'active' : ''; ?>">
-                                    <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>">
+                                    <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&tipo=<?php echo urlencode($tipo_filter); ?>">
                                         <?php echo $i; ?>
                                     </a>
                                 </li>
@@ -394,7 +501,7 @@ $stats = $stats_stmt->fetch();
 
                             <?php if ($page < $total_pages): ?>
                                 <li class="page-item">
-                                    <a class="page-link" href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>">
+                                    <a class="page-link" href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>&tipo=<?php echo urlencode($tipo_filter); ?>">
                                         <i class="fas fa-chevron-right"></i>
                                     </a>
                                 </li>

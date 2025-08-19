@@ -12,7 +12,13 @@ if (session_status() === PHP_SESSION_NONE) {
 define('SITE_NAME', 'JTR Imóveis');
 define('SITE_URL', ''); // Será detectado automaticamente
 define('SITE_EMAIL', 'contato@jtrimoveis.com.br');
-define('SITE_PHONE', '(11) 99999-9999');
+// Número genérico removido - usando apenas números específicos para vendas e locação
+
+// Números de telefone específicos por tipo de operação
+define('PHONE_VENDA', '+55 12 98863-2149');
+define('PHONE_LOCACAO', '+55 12 99126-7831');
+define('PHONE_WHATSAPP_VENDA', '5512988632149');
+define('PHONE_WHATSAPP_LOCACAO', '5512991267831');
 
 // Configurações de upload
 define('UPLOAD_DIR', dirname(__DIR__) . '/uploads/');

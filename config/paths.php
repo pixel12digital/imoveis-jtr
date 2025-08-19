@@ -203,7 +203,10 @@ function fileExists($path) {
 function includeFile($relativePath) {
     $absolutePath = getAbsolutePath($relativePath);
     if (file_exists($absolutePath)) {
-        return include $absolutePath;
+        // Usar require para garantir que as variáveis sejam passadas corretamente
+        // E garantir que as variáveis globais sejam acessíveis
+        global $pdo;
+        return require $absolutePath;
     }
     return false;
 }

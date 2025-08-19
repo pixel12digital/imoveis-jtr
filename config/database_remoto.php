@@ -1,6 +1,6 @@
 <?php
-// Configuração SEMPRE para banco remoto do Hostinger
-// Este projeto usa exclusivamente o banco remoto para dev e produção
+// Configuração FORÇADA para usar banco remoto do Hostinger
+// Use este arquivo quando quiser sempre usar o banco remoto
 
 // Configurações do banco de dados REMOTO (Hostinger)
 define('DB_HOST', 'auth-db1607.hstgr.io');
@@ -9,32 +9,29 @@ define('DB_USER', 'u342734079_jtrimoveis');
 define('DB_PASS', 'Los@ngo#081081');
 
 // Log para debug
-error_log('[JTR Imóveis] SEMPRE usando banco REMOTO - Host: ' . DB_HOST . ' - Database: ' . DB_NAME);
+error_log('[JTR Imóveis] FORÇANDO uso do banco REMOTO - Host: ' . DB_HOST . ' - Database: ' . DB_NAME);
 
 try {
-    // Conexão com timeout otimizado para conexões remotas
+    // Conexão com timeout aumentado para conexões remotas
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8;connect_timeout=30";
     $pdo = new PDO($dsn, DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     
-    // Configurações otimizadas para conexões remotas
+    // Configurações adicionais para conexões remotas
     $pdo->setAttribute(PDO::ATTR_TIMEOUT, 30);
     $pdo->setAttribute(PDO::MYSQL_ATTR_INIT_COMMAND, "SET NAMES utf8");
     
-    // Tornar a variável $pdo global
-    global $pdo;
-    
     error_log('[JTR Imóveis] Conexão com banco REMOTO estabelecida com sucesso');
-
+    
 } catch(PDOException $e) {
     $error_msg = "Erro na conexão com o banco REMOTO: " . $e->getMessage();
     error_log('[JTR Imóveis] ' . $error_msg);
-
+    
     // Em caso de erro, mostrar mensagem detalhada para debug
     die("Erro crítico: " . $error_msg . "<br><br>
          <strong>Verifique:</strong><br>
-         - Se o host <strong>" . DB_HOST . "</strong> está acessível<br>
+         - Se o host <strong>" . DB_HOST . "</strong> está correto<br>
          - Se as credenciais estão corretas<br>
          - Se há restrições de IP no Hostinger<br>
          - Se o servidor MySQL está rodando<br>

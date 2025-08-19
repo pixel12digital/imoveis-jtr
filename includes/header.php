@@ -30,7 +30,7 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-phone me-2"></i>
-                        <span><?php echo SITE_PHONE; ?></span>
+                        <span><?php echo PHONE_VENDA; ?></span>
                     </div>
                     <div class="social-links">
                         <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>

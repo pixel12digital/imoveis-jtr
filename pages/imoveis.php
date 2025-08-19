@@ -23,11 +23,10 @@ $destaque = isset($_GET['destaque']) ? (bool)$_GET['destaque'] : false;
 $busca = isset($_GET['busca']) ? cleanInput($_GET['busca']) : '';
 
 // Construir query SQL
-$sql = "SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, l.estado, u.nome as corretor_nome, u.telefone as corretor_telefone 
+$sql = "SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, l.estado 
         FROM imoveis i 
         INNER JOIN tipos_imovel t ON i.tipo_id = t.id 
         INNER JOIN localizacoes l ON i.localizacao_id = l.id 
-        INNER JOIN usuarios u ON i.usuario_id = u.id 
         WHERE 1=1";
 
 $params = [];
@@ -465,9 +464,9 @@ $caracteristicas_list = $pdo->query("SELECT * FROM caracteristicas WHERE ativo =
                                                 <i class="fas fa-eye"></i> Ver Detalhes
                                             </a>
                                                                                          <button class="btn btn-outline-success btn-sm" 
-                                                     onclick="contatarCorretor('<?= htmlspecialchars($imovel['corretor_nome']) ?>', '<?= htmlspecialchars($imovel['corretor_telefone']) ?>')">
-                                                 <i class="fas fa-phone"></i> Falar com Corretor
-                                             </button>
+                                                    onclick="contatarCorretor('JTR Imóveis', '<?= PHONE_VENDA ?>')">
+                                                <i class="fas fa-phone"></i> Falar com Corretor
+                                            </button>
                                              <button class="btn btn-outline-info btn-sm" 
                                                      onclick="adicionarAoComparador(<?= $imovel['id'] ?>)">
                                                  <i class="fas fa-balance-scale"></i> Comparar

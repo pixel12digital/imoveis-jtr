@@ -1,5 +1,40 @@
 <?php
 // Página de Contato - JTR Imóveis
+
+// Processar mensagens de sucesso/erro
+$mensagem_enviada = false;
+$erro = '';
+$tipo_operacao = '';
+
+if (isset($_GET['success']) && $_GET['success'] == '1') {
+    $mensagem_enviada = true;
+    $tipo_operacao = isset($_GET['tipo']) ? $_GET['tipo'] : '';
+}
+
+if (isset($_GET['error'])) {
+    $erro = urldecode($_GET['error']);
+}
+
+// Buscar estatísticas de imóveis
+try {
+    $stats_sql = "SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'disponivel' THEN 1 ELSE 0 END) as disponiveis,
+        SUM(CASE WHEN status = 'vendido' THEN 1 ELSE 0 END) as vendidos,
+        SUM(CASE WHEN status = 'alugado' THEN 1 ELSE 0 END) as alugados
+    FROM imoveis";
+    $stats_stmt = $pdo->prepare($stats_sql);
+    $stats_stmt->execute();
+    $stats = $stats_stmt->fetch();
+    
+    $total_imoveis = $stats['disponiveis'] ?? 0;
+    $total_vendidos = $stats['vendidos'] ?? 0;
+    $total_alugados = $stats['alugados'] ?? 0;
+} catch (Exception $e) {
+    $total_imoveis = 0;
+    $total_vendidos = 0;
+    $total_alugados = 0;
+}
 ?>
 
 <!-- Hero Section -->
@@ -9,6 +44,82 @@
             <div class="col-12 text-center">
                 <h1 class="h2 mb-2">Entre em Contato</h1>
                 <p class="mb-0">Estamos aqui para ajudar você a encontrar o imóvel ideal</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Números de Contato Destacados -->
+<section class="contact-numbers-highlight py-4 bg-light" role="region" aria-labelledby="contact-numbers-title">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 id="contact-numbers-title" class="visually-hidden">Números de Contato Principais</h2>
+                <div class="row g-3">
+                    <!-- Vendas -->
+                    <div class="col-md-6">
+                        <div class="card border-success h-100" role="article" aria-labelledby="vendas-title">
+                            <div class="card-body text-center p-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-home fa-2x text-success" aria-hidden="true"></i>
+                                </div>
+                                <h3 id="vendas-title" class="card-title text-success mb-2 h6">
+                                    <i class="fas fa-star me-1" aria-hidden="true"></i>Vendas
+                                </h3>
+                                <p class="card-text mb-2">
+                                    <a href="tel:<?php echo str_replace(['+', ' ', '-'], '', PHONE_VENDA); ?>" 
+                                       class="btn btn-success btn-sm"
+                                       aria-label="Ligar para vendas: <?php echo PHONE_VENDA; ?>"
+                                       title="Ligar para vendas">
+                                        <i class="fas fa-phone me-1" aria-hidden="true"></i><?php echo PHONE_VENDA; ?>
+                                    </a>
+                                </p>
+                                <p class="card-text mb-2">
+                                    <a href="https://wa.me/<?php echo PHONE_WHATSAPP_VENDA; ?>?text=Olá! Gostaria de saber mais sobre imóveis para compra." 
+                                       target="_blank" 
+                                       class="btn btn-outline-success btn-sm"
+                                       aria-label="Abrir WhatsApp para vendas. Número: <?php echo PHONE_VENDA; ?>"
+                                       title="WhatsApp Vendas">
+                                        <i class="fab fa-whatsapp me-1" aria-hidden="true"></i>WhatsApp Vendas
+                                    </a>
+                                </p>
+                                <small class="text-muted">Compra e venda de imóveis</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Locação -->
+                    <div class="col-md-6">
+                        <div class="card border-info h-100" role="article" aria-labelledby="locacao-title">
+                            <div class="card-body text-center p-3">
+                                <div class="mb-2">
+                                    <i class="fas fa-key fa-2x text-info" aria-hidden="true"></i>
+                                </div>
+                                <h3 id="locacao-title" class="card-title text-info mb-2 h6">
+                                    <i class="fas fa-star me-1" aria-hidden="true"></i>Locação
+                                </h3>
+                                <p class="card-text mb-2">
+                                    <a href="tel:<?php echo str_replace(['+', ' ', '-'], '', PHONE_LOCACAO); ?>" 
+                                       class="btn btn-info btn-sm"
+                                       aria-label="Ligar para locação: <?php echo PHONE_LOCACAO; ?>"
+                                       title="Ligar para locação">
+                                        <i class="fas fa-phone me-1" aria-hidden="true"></i><?php echo PHONE_LOCACAO; ?>
+                                    </a>
+                                </p>
+                                <p class="card-text mb-2">
+                                    <a href="https://wa.me/<?php echo PHONE_WHATSAPP_LOCACAO; ?>?text=Olá! Gostaria de saber mais sobre imóveis para aluguel." 
+                                       target="_blank" 
+                                       class="btn btn-outline-info btn-sm"
+                                       aria-label="Abrir WhatsApp para locação. Número: <?php echo PHONE_LOCACAO; ?>"
+                                       title="WhatsApp Locação">
+                                        <i class="fab fa-whatsapp me-1" aria-hidden="true"></i>WhatsApp Locação
+                                    </a>
+                                </p>
+                                <small class="text-muted">Aluguel de imóveis</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -64,18 +175,65 @@
                             <i class="fas fa-address-book me-2 text-primary"></i>Informações de Contato
                         </h5>
                         
+                        <!-- Telefone Geral -->
                         <div class="contact-item mb-3">
                             <div class="d-flex align-items-center">
                                 <div class="contact-icon-small me-3">
                                     <i class="fas fa-phone fa-lg text-primary"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-1">Telefone</h6>
+                                    <h6 class="mb-1">Telefone Geral</h6>
+                                                            <p class="mb-0">
+                            <a href="tel:<?php echo PHONE_VENDA; ?>" class="text-decoration-none">
+                                <?php echo PHONE_VENDA; ?>
+                            </a>
+                        </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vendas - Destaque -->
+                        <div class="contact-item mb-3 p-3 bg-success bg-opacity-10 rounded" role="article" aria-labelledby="vendas-detail-title">
+                            <div class="d-flex align-items-center">
+                                <div class="contact-icon-small me-3">
+                                    <i class="fas fa-home fa-lg text-success" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <h6 id="vendas-detail-title" class="mb-1 text-success">
+                                        <i class="fas fa-star me-1" aria-hidden="true"></i>Vendas
+                                    </h6>
                                     <p class="mb-0">
-                                        <a href="tel:<?php echo SITE_PHONE; ?>" class="text-decoration-none">
-                                            <?php echo SITE_PHONE; ?>
+                                        <a href="tel:<?php echo PHONE_VENDA; ?>" 
+                                           class="text-decoration-none fw-bold"
+                                           aria-label="Ligar para vendas: <?php echo PHONE_VENDA; ?>"
+                                           title="Ligar para vendas">
+                                            <?php echo PHONE_VENDA; ?>
                                         </a>
                                     </p>
+                                    <small class="text-muted">Compra e venda de imóveis</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Locação - Destaque -->
+                        <div class="contact-item mb-3 p-3 bg-info bg-opacity-10 rounded" role="article" aria-labelledby="locacao-detail-title">
+                            <div class="d-flex align-items-center">
+                                <div class="contact-icon-small me-3">
+                                    <i class="fas fa-key fa-lg text-info" aria-hidden="true"></i>
+                                </div>
+                                <div>
+                                    <h6 id="locacao-detail-title" class="mb-1 text-info">
+                                        <i class="fas fa-star me-1" aria-hidden="true"></i>Locação
+                                    </h6>
+                                    <p class="mb-0">
+                                        <a href="tel:<?php echo PHONE_LOCACAO; ?>" 
+                                           class="text-decoration-none fw-bold"
+                                           aria-label="Ligar para locação: <?php echo PHONE_LOCACAO; ?>"
+                                           title="Ligar para locação">
+                                            <?php echo PHONE_LOCACAO; ?>
+                                        </a>
+                                    </p>
+                                    <small class="text-muted">Aluguel de imóveis</small>
                                 </div>
                             </div>
                         </div>
@@ -96,17 +254,7 @@
                             </div>
                         </div>
 
-                        <div class="contact-item mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="contact-icon-small me-3">
-                                    <i class="fas fa-map-marker-alt fa-lg text-primary"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1">Endereço</h6>
-                                    <p class="mb-0">São Paulo - SP, Brasil</p>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <div class="contact-item">
                             <div class="d-flex align-items-center">
@@ -148,10 +296,18 @@
 
                         <div class="whatsapp-cta">
                             <h6 class="mb-3">Atendimento via WhatsApp</h6>
-                            <a href="https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre imóveis." 
-                               target="_blank" class="btn btn-success btn-lg w-100">
-                                <i class="fab fa-whatsapp me-2"></i>Falar no WhatsApp
-                            </a>
+                            
+                            <div class="mb-3">
+                                <a href="https://wa.me/<?php echo PHONE_WHATSAPP_VENDA; ?>?text=Olá! Gostaria de saber mais sobre imóveis para compra." 
+                                   target="_blank" class="btn btn-success btn-sm w-100 mb-2">
+                                    <i class="fab fa-whatsapp me-2"></i>Vendas
+                                </a>
+                                <a href="https://wa.me/<?php echo PHONE_WHATSAPP_LOCACAO; ?>?text=Olá! Gostaria de saber mais sobre imóveis para aluguel." 
+                                   target="_blank" class="btn btn-info btn-sm w-100">
+                                    <i class="fab fa-whatsapp me-2"></i>Locação
+                                </a>
+                            </div>
+                            
                             <small class="text-muted d-block mt-2">
                                 Resposta em até 5 minutos
                             </small>
@@ -169,12 +325,12 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card border-0 shadow">
-                    <div class="card-header bg-primary text-white text-center">
-                        <h4 class="mb-0">
-                            <i class="fas fa-paper-plane me-2"></i>Envie sua Mensagem
-                        </h4>
-                        <p class="mb-0 mt-2">Preencha o formulário abaixo e entraremos em contato</p>
-                    </div>
+                                         <div class="card-header bg-primary text-white text-center">
+                         <h4 id="contact-form-title" class="mb-0">
+                             <i class="fas fa-paper-plane me-2" aria-hidden="true"></i>Envie sua Mensagem
+                         </h4>
+                         <p class="mb-0 mt-2">Preencha o formulário abaixo e entraremos em contato</p>
+                     </div>
                     <div class="card-body p-4">
                         <?php if ($mensagem_enviada): ?>
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -192,34 +348,48 @@
                             </div>
                         <?php endif; ?>
 
-                        <form id="contact-form" method="POST" action="<?php echo getPagePath('contato'); ?>">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="nome" class="form-label">
-                                        <i class="fas fa-user me-2 text-primary"></i>Nome Completo *
-                                    </label>
-                                    <input type="text" class="form-control" id="nome" name="nome" 
-                                           value="<?php echo isset($nome) ? htmlspecialchars($nome) : ''; ?>" 
-                                           required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="email" class="form-label">
-                                        <i class="fas fa-envelope me-2 text-primary"></i>E-mail *
-                                    </label>
-                                    <input type="email" class="form-control" id="email" name="email" 
-                                           value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" 
-                                           required>
-                                </div>
-                            </div>
+                                                 <form id="contact-form" method="POST" action="process_contact.php" role="form" aria-labelledby="contact-form-title">
+                             <div class="row">
+                                 <div class="col-md-6 mb-3">
+                                     <label for="nome" class="form-label">
+                                         <i class="fas fa-user me-2 text-primary" aria-hidden="true"></i>Nome Completo <span class="text-danger" aria-label="obrigatório">*</span>
+                                     </label>
+                                     <input type="text" 
+                                            class="form-control" 
+                                            id="nome" 
+                                            name="nome" 
+                                            value="<?php echo isset($nome) ? htmlspecialchars($nome) : ''; ?>" 
+                                            required
+                                            aria-required="true"
+                                            aria-describedby="nome-help"
+                                            placeholder="Digite seu nome completo">
+                                     <div id="nome-help" class="form-text visually-hidden">Campo obrigatório para identificação</div>
+                                 </div>
+                                 <div class="col-md-6 mb-3">
+                                     <label for="email" class="form-label">
+                                         <i class="fas fa-envelope me-2 text-primary" aria-hidden="true"></i>E-mail <span class="text-danger" aria-label="obrigatório">*</span>
+                                     </label>
+                                     <input type="email" 
+                                            class="form-control" 
+                                            id="email" 
+                                            name="email" 
+                                            value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>" 
+                                            required
+                                            aria-required="true"
+                                            aria-describedby="email-help"
+                                            placeholder="Digite seu e-mail válido">
+                                     <div id="email-help" class="form-text visually-hidden">Campo obrigatório para contato</div>
+                                 </div>
+                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="telefone" class="form-label">
                                         <i class="fas fa-phone me-2 text-primary"></i>Telefone
                                     </label>
-                                    <input type="tel" class="form-control" id="telefone" name="telefone" 
-                                           value="<?php echo isset($telefone) ? htmlspecialchars($telefone) : ''; ?>"
-                                           placeholder="(11) 99999-9999">
+                                                                        <input type="tel" class="form-control" id="telefone" name="telefone" 
+                                           value="<?php echo isset($telefone) ? htmlspecialchars($telefone) : ''; ?>" 
+                                           placeholder="(12) 98863-2149">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="assunto" class="form-label">
@@ -277,32 +447,7 @@
     </div>
 </section>
 
-<!-- Mapa e Localização -->
-<section class="map-section py-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h3 class="text-center mb-4">
-                    <i class="fas fa-map-marked-alt me-2 text-primary"></i>Nossa Localização
-                </h3>
-                <div class="map-container">
-                    <div class="map-placeholder bg-light d-flex align-items-center justify-content-center" 
-                         style="height: 400px; border-radius: 10px;">
-                        <div class="text-center">
-                            <i class="fas fa-map fa-5x text-muted mb-3"></i>
-                            <h5 class="text-muted">Mapa da Localização</h5>
-                            <p class="text-muted mb-2">São Paulo - SP, Brasil</p>
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Clique para abrir no Google Maps
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+
 
 <!-- FAQ -->
 <section class="faq-section py-5 bg-light">
@@ -388,9 +533,13 @@
             <a href="<?php echo getPagePath('imoveis'); ?>" class="btn btn-light btn-lg">
                 <i class="fas fa-search me-2"></i>Ver Imóveis
             </a>
-            <a href="https://wa.me/5511999999999?text=Olá! Gostaria de agendar uma visita." 
+            <a href="https://wa.me/<?php echo PHONE_WHATSAPP_VENDA; ?>?text=Olá! Gostaria de agendar uma visita para compra." 
                target="_blank" class="btn btn-success btn-lg">
-                <i class="fab fa-whatsapp me-2"></i>Agendar Visita
+                <i class="fab fa-whatsapp me-2"></i>Agendar Visita - Vendas
+            </a>
+            <a href="https://wa.me/<?php echo PHONE_WHATSAPP_LOCACAO; ?>?text=Olá! Gostaria de agendar uma visita para locação." 
+               target="_blank" class="btn btn-info btn-lg">
+                <i class="fab fa-whatsapp me-2"></i>Agendar Visita - Locação
             </a>
         </div>
     </div>
@@ -399,20 +548,20 @@
 <script>
 // Validação e funcionalidades do formulário
 document.getElementById('contact-form').addEventListener('submit', function(e) {
+    e.preventDefault(); // Prevenir envio padrão
+    
     const nome = document.getElementById('nome').value.trim();
     const email = document.getElementById('email').value.trim();
     const mensagem = document.getElementById('mensagem').value.trim();
     const concordo = document.getElementById('concordo').checked;
     
     if (!nome || !email || !mensagem) {
-        e.preventDefault();
-        JTRImoveis.showNotification('Por favor, preencha todos os campos obrigatórios.', 'warning');
+        showNotification('Por favor, preencha todos os campos obrigatórios.', 'warning');
         return false;
     }
     
     if (!concordo) {
-        e.preventDefault();
-        JTRImoveis.showNotification('Você deve concordar com a política de privacidade.', 'warning');
+        showNotification('Você deve concordar com a política de privacidade.', 'warning');
         return false;
     }
     
@@ -422,12 +571,78 @@ document.getElementById('contact-form').addEventListener('submit', function(e) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
     submitBtn.disabled = true;
     
-    // Restaurar botão após envio
-    setTimeout(() => {
+    // Criar FormData para envio AJAX
+    const formData = new FormData(this);
+    
+    // Enviar via AJAX
+    fetch('process_contact.php', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.sucesso) {
+            showNotification(data.mensagem, 'success');
+            
+            // Mostrar informações específicas baseadas no tipo de operação
+            if (data.tipo_operacao) {
+                const tipoText = data.tipo_operacao === 'venda' ? 'Vendas' : 'Locação';
+                const telefone = data.telefone_operacao;
+                
+                setTimeout(() => {
+                    showNotification(`Sua mensagem foi direcionada para o setor de ${tipoText}. Telefone: ${telefone}`, 'info');
+                }, 2000);
+            }
+            
+            // Limpar formulário
+            this.reset();
+        } else {
+            showNotification(data.mensagem, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showNotification('Erro ao enviar mensagem. Tente novamente.', 'error');
+    })
+    .finally(() => {
+        // Restaurar botão
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
-    }, 3000);
+    });
 });
+
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    // Verificar se existe a função JTRImoveis
+    if (typeof JTRImoveis !== 'undefined' && JTRImoveis.showNotification) {
+        JTRImoveis.showNotification(message, type);
+    } else {
+        // Fallback para notificação simples
+        const alertClass = type === 'success' ? 'alert-success' : 
+                          type === 'error' ? 'alert-danger' : 
+                          type === 'warning' ? 'alert-warning' : 'alert-info';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Inserir no topo do formulário
+        const form = document.getElementById('contact-form');
+        form.insertAdjacentHTML('beforebegin', alertHtml);
+        
+        // Auto-remover após 5 segundos
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => alert.remove());
+        }, 5000);
+    }
+}
 
 // Máscara para telefone
 document.getElementById('telefone').addEventListener('input', function(e) {
@@ -447,12 +662,7 @@ document.getElementById('telefone').addEventListener('input', function(e) {
     e.target.value = value;
 });
 
-// Abrir mapa no Google Maps
-document.querySelector('.map-placeholder').addEventListener('click', function() {
-    const address = 'São Paulo, SP, Brasil';
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    window.open(googleMapsUrl, '_blank');
-});
+
 </script>
 
 

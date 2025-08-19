@@ -23,3 +23,4 @@ SELECT COUNT(*) as total_apos_limpeza FROM localizacoes;
 SELECT '✅ Tabela localizacoes limpa com sucesso!' as resultado;
 
 
+

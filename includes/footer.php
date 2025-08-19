@@ -41,18 +41,30 @@
                 <div class="col-lg-4 mb-4">
                     <h6>Contato</h6>
                     <div class="contact-info">
+
                         <p class="mb-2">
-                            <i class="fas fa-phone"></i>
-                            <a href="tel:<?php echo str_replace(['(', ')', ' ', '-'], '', SITE_PHONE); ?>"><?php echo SITE_PHONE; ?></a>
+                            <i class="fas fa-home text-success" aria-hidden="true"></i>
+                            <strong>Vendas:</strong> 
+                            <a href="tel:<?php echo str_replace(['+', ' ', '-'], '', PHONE_VENDA); ?>" 
+                               aria-label="Ligar para vendas: <?php echo PHONE_VENDA; ?>"
+                               title="Ligar para vendas">
+                                <?php echo PHONE_VENDA; ?>
+                            </a>
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-key text-info" aria-hidden="true"></i>
+                            <strong>Locação:</strong> 
+                            <a href="tel:<?php echo str_replace(['+', ' ', '-'], '', PHONE_LOCACAO); ?>" 
+                               aria-label="Ligar para locação: <?php echo PHONE_LOCACAO; ?>"
+                               title="Ligar para locação">
+                                <?php echo PHONE_LOCACAO; ?>
+                            </a>
                         </p>
                         <p class="mb-2">
                             <i class="fas fa-envelope"></i>
                             <a href="mailto:<?php echo SITE_EMAIL; ?>"><?php echo SITE_EMAIL; ?></a>
                         </p>
-                        <p class="mb-2">
-                            <i class="fas fa-map-marker-alt"></i>
-                            São Paulo - SP, Brasil
-                        </p>
+
                     </div>
                 </div>
             </div>
@@ -81,11 +93,28 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="<?php echo getAssetPath('js/main.js'); ?>"></script>
 
-    <!-- WhatsApp Float Button -->
-    <div class="whatsapp-float">
-        <a href="https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre imóveis." 
-           target="_blank" class="whatsapp-btn">
-            <i class="fab fa-whatsapp"></i>
+    <!-- WhatsApp Float Buttons -->
+    <div class="whatsapp-float" role="complementary" aria-label="Botões de contato rápido">
+        <!-- Botão principal de vendas -->
+        <a href="https://wa.me/<?php echo PHONE_WHATSAPP_VENDA; ?>?text=Olá! Gostaria de saber mais sobre imóveis para compra." 
+           target="_blank" 
+           class="whatsapp-btn whatsapp-venda" 
+           title="WhatsApp Vendas - Abrir conversa para compra de imóveis"
+           aria-label="Abrir WhatsApp para vendas de imóveis. Número: <?php echo PHONE_VENDA; ?>"
+           role="button">
+            <i class="fab fa-whatsapp" aria-hidden="true"></i>
+            <span class="whatsapp-label" aria-label="Vendas">Vendas</span>
+        </a>
+        
+        <!-- Botão de locação -->
+        <a href="https://wa.me/<?php echo PHONE_WHATSAPP_LOCACAO; ?>?text=Olá! Gostaria de saber mais sobre imóveis para aluguel." 
+           target="_blank" 
+           class="whatsapp-btn whatsapp-locacao" 
+           title="WhatsApp Locação - Abrir conversa para aluguel de imóveis"
+           aria-label="Abrir WhatsApp para locação de imóveis. Número: <?php echo PHONE_LOCACAO; ?>"
+           role="button">
+            <i class="fas fa-key" aria-hidden="true"></i>
+            <span class="whatsapp-label" aria-label="Locação">Locação</span>
         </a>
     </div>
 </body>
