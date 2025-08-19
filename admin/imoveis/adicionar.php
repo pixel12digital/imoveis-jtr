@@ -3,9 +3,10 @@
 ob_start();
 
 // Carregar configurações ANTES de iniciar a sessão
-require_once '../../config/paths.php';
-require_once '../../config/database.php';
-require_once '../../config/config.php';
+$config_path = dirname(__DIR__) . '/../config/';
+require_once $config_path . 'paths.php';
+require_once $config_path . 'database.php';
+require_once $config_path . 'config.php';
 
 // Agora iniciar a sessão
 session_start();
@@ -19,25 +20,75 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 $success_message = '';
 $error_message = '';
 
+// Debug: Verificar se as funções estão carregadas
+error_log("DEBUG LOAD: Verificando carregamento das funções...");
+error_log("DEBUG LOAD: fetchAll existe? " . (function_exists('fetchAll') ? 'SIM' : 'NÃO'));
+error_log("DEBUG LOAD: insert existe? " . (function_exists('insert') ? 'SIM' : 'NÃO'));
+error_log("DEBUG LOAD: cleanInput existe? " . (function_exists('cleanInput') ? 'SIM' : 'NÃO'));
+
 // Buscar dados para os selects
 $tipos_imovel = fetchAll("SELECT * FROM tipos_imovel ORDER BY nome");
-$localizacoes = fetchAll("SELECT * FROM localizacoes ORDER BY cidade, bairro");
+$localizacoes = fetchAll("SELECT * FROM localizacoes ORDER BY estado, cidade, bairro");
 $usuarios = fetchAll("SELECT * FROM usuarios WHERE ativo = 1 ORDER BY nome");
 $caracteristicas = fetchAll("SELECT * FROM caracteristicas ORDER BY nome");
 
+// Array de estados brasileiros para cadastro rápido
+$estados_brasil = [
+    'AC' => 'Acre', 'AL' => 'Alagoas', 'AP' => 'Amapá', 'AM' => 'Amazonas',
+    'BA' => 'Bahia', 'CE' => 'Ceará', 'DF' => 'Distrito Federal', 'ES' => 'Espírito Santo',
+    'GO' => 'Goiás', 'MA' => 'Maranhão', 'MT' => 'Mato Grosso', 'MS' => 'Mato Grosso do Sul',
+    'MG' => 'Minas Gerais', 'PA' => 'Pará', 'PB' => 'Paraíba', 'PR' => 'Paraná',
+    'PE' => 'Pernambuco', 'PI' => 'Piauí', 'RJ' => 'Rio de Janeiro', 'RN' => 'Rio Grande do Norte',
+    'RS' => 'Rio Grande do Sul', 'RO' => 'Rondônia', 'RR' => 'Roraima', 'SC' => 'Santa Catarina',
+    'SP' => 'São Paulo', 'SE' => 'Sergipe', 'TO' => 'Tocantins'
+];
+
 // Processar formulário
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        // Validar dados obrigatórios
-        $titulo = cleanInput($_POST['titulo']);
-        $descricao = cleanInput($_POST['descricao']);
-        $preco = (float)$_POST['preco'];
-        $tipo_id = (int)$_POST['tipo_id'];
-        $localizacao_id = (int)$_POST['localizacao_id'];
+    error_log("DEBUG FORM: ==========================================");
+    error_log("DEBUG FORM: Formulário POST recebido");
+    error_log("DEBUG FORM: POST data: " . print_r($_POST, true));
+    error_log("DEBUG FORM: FILES data: " . print_r($_FILES, true));
+    error_log("DEBUG FORM: ==========================================");
+    
+            // Debug adicional para verificar se os dados estão chegando
+        error_log("DEBUG FORM: Verificando campos específicos:");
+        error_log("DEBUG FORM: Título: " . ($_POST['titulo'] ?? 'NÃO DEFINIDO'));
+        error_log("DEBUG FORM: Descrição: " . ($_POST['descricao'] ?? 'NÃO DEFINIDO'));
+        error_log("DEBUG FORM: Preço: " . ($_POST['preco'] ?? 'NÃO DEFINIDO'));
+        error_log("DEBUG FORM: Tipo ID: " . ($_POST['tipo_id'] ?? 'NÃO DEFINIDO'));
+        error_log("DEBUG FORM: Localização ID: " . ($_POST['localizacao_id'] ?? 'NÃO DEFINIDO'));
+        error_log("DEBUG FORM: ==========================================");
+        
+                // Verificar se chegou até aqui
+        error_log("DEBUG FORM: Iniciando processamento dos dados...");
+        
+        // Verificar se as funções necessárias existem
+        error_log("DEBUG FORM: Verificando funções...");
+        error_log("DEBUG FORM: cleanInput existe? " . (function_exists('cleanInput') ? 'SIM' : 'NÃO'));
+        error_log("DEBUG FORM: insert existe? " . (function_exists('insert') ? 'SIM' : 'NÃO'));
+        
+        try {
+            error_log("DEBUG FORM: Iniciando try/catch...");
+            
+            // Validar dados obrigatórios
+            error_log("DEBUG FORM: Validando dados obrigatórios...");
+            $titulo = cleanInput($_POST['titulo']);
+            $descricao = cleanInput($_POST['descricao']);
+            $preco = (float)$_POST['preco'];
+            $tipo_id = (int)$_POST['tipo_id'];
+            $localizacao_id = (int)$_POST['localizacao_id'];
+            
+            error_log("DEBUG FORM: Dados validados - Título: {$titulo}, Preço: {$preco}, Tipo: {$tipo_id}, Localização: {$localizacao_id}");
         
         if (empty($titulo) || empty($descricao) || $preco <= 0 || $tipo_id <= 0 || $localizacao_id <= 0) {
+            error_log("DEBUG FORM: Campos obrigatórios não preenchidos");
             throw new Exception('Todos os campos obrigatórios devem ser preenchidos.');
         }
+        
+        // Debug: Verificar sessão
+        error_log("DEBUG SESSION: admin_id = " . ($_SESSION['admin_id'] ?? 'NÃO DEFINIDO'));
+        error_log("DEBUG SESSION: admin_nome = " . ($_SESSION['admin_nome'] ?? 'NÃO DEFINIDO'));
         
         // Preparar dados do imóvel
         $dados_imovel = [
@@ -46,23 +97,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'preco' => $preco,
             'tipo_id' => $tipo_id,
             'localizacao_id' => $localizacao_id,
-            'usuario_id' => $_SESSION['admin_id'],
+            'usuario_id' => $_SESSION['admin_id'] ?? 1, // Fallback para usuário 1 se não houver sessão
             'status' => cleanInput($_POST['status']),
             'destaque' => isset($_POST['destaque']) ? 1 : 0,
             'area_total' => !empty($_POST['area_total']) ? (float)$_POST['area_total'] : null,
             'area_construida' => !empty($_POST['area_construida']) ? (float)$_POST['area_construida'] : null,
             'quartos' => !empty($_POST['quartos']) ? (int)$_POST['quartos'] : null,
             'banheiros' => !empty($_POST['banheiros']) ? (int)$_POST['banheiros'] : null,
-            'vagas_garagem' => !empty($_POST['vagas_garagem']) ? (int)$_POST['vagas_garagem'] : null,
+            'vagas' => !empty($_POST['vagas_garagem']) ? (int)$_POST['vagas_garagem'] : null,
             'endereco' => cleanInput($_POST['endereco']),
-            'cep' => cleanInput($_POST['cep']),
             'data_criacao' => date('Y-m-d H:i:s')
         ];
         
         // Inserir imóvel
+        error_log("DEBUG FORM: Inserindo imóvel no banco...");
+        error_log("DEBUG FORM: Dados para inserção: " . print_r($dados_imovel, true));
+        
+        error_log("DEBUG FORM: Chamando função insert...");
+        error_log("DEBUG FORM: Tabela: imoveis");
+        error_log("DEBUG FORM: Dados: " . print_r($dados_imovel, true));
+        
+        error_log("DEBUG FORM: Função insert encontrada, executando...");
         $imovel_id = insert("imoveis", $dados_imovel);
+        error_log("DEBUG FORM: Função insert executada");
+        error_log("DEBUG FORM: Resultado do insert: " . ($imovel_id ? "SUCESSO - ID: {$imovel_id}" : "FALHA - Retornou: " . var_export($imovel_id, true)));
         
         if ($imovel_id) {
+            error_log("DEBUG FORM: Imóvel inserido com sucesso! ID: " . $imovel_id);
             // Inserir características selecionadas
             if (isset($_POST['caracteristicas']) && is_array($_POST['caracteristicas'])) {
                 foreach ($_POST['caracteristicas'] as $caracteristica_id) {
@@ -74,36 +135,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             // Processar upload de fotos
+            error_log("DEBUG FORM: Verificando se há fotos para upload...");
+            error_log("DEBUG FORM: isset(\$_FILES['fotos']): " . (isset($_FILES['fotos']) ? 'SIM' : 'NÃO'));
+            error_log("DEBUG FORM: !empty(\$_FILES['fotos']['name'][0]): " . (!empty($_FILES['fotos']['name'][0]) ? 'SIM' : 'NÃO'));
+            
             if (isset($_FILES['fotos']) && !empty($_FILES['fotos']['name'][0])) {
+                
+                // DEBUG: Log das informações de upload
+                error_log("DEBUG UPLOAD: Iniciando processamento de fotos");
+                error_log("DEBUG UPLOAD: FILES array: " . print_r($_FILES, true));
+                
                 $upload_dir = '../../uploads/imoveis/' . $imovel_id . '/';
+                error_log("DEBUG UPLOAD: Diretório de upload: " . $upload_dir);
                 
                 // Criar diretório se não existir
                 if (!is_dir($upload_dir)) {
-                    mkdir($upload_dir, 0755, true);
+                    $created = mkdir($upload_dir, 0755, true);
+                    error_log("DEBUG UPLOAD: Diretório criado: " . ($created ? 'SIM' : 'NÃO'));
+                } else {
+                    error_log("DEBUG UPLOAD: Diretório já existe");
                 }
                 
                 foreach ($_FILES['fotos']['tmp_name'] as $key => $tmp_name) {
+                    error_log("DEBUG UPLOAD: Processando arquivo {$key}");
+                    error_log("DEBUG UPLOAD: Nome: " . $_FILES['fotos']['name'][$key]);
+                    error_log("DEBUG UPLOAD: Tamanho: " . $_FILES['fotos']['size'][$key]);
+                    error_log("DEBUG UPLOAD: Erro: " . $_FILES['fotos']['error'][$key]);
+                    error_log("DEBUG UPLOAD: Tipo: " . $_FILES['fotos']['type'][$key]);
+                    error_log("DEBUG UPLOAD: Temp: " . $tmp_name);
+                    
                     if ($_FILES['fotos']['error'][$key] === UPLOAD_ERR_OK) {
                         $filename = $_FILES['fotos']['name'][$key];
-                        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+                        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                        
+                        error_log("DEBUG UPLOAD: Extensão detectada: " . $ext);
+                        
+                        // Validar extensão do arquivo
+                        $allowed_extensions = getAllowedExtensions();
+                        error_log("DEBUG UPLOAD: Extensões permitidas: " . implode(', ', $allowed_extensions));
+                        
+                        if (!in_array($ext, $allowed_extensions)) {
+                            error_log("DEBUG UPLOAD: Extensão inválida: " . $ext);
+                            throw new Exception("Tipo de arquivo não suportado: {$ext}. Formatos aceitos: " . implode(', ', $allowed_extensions));
+                        }
+                        
+                        // Validar tamanho do arquivo
+                        error_log("DEBUG UPLOAD: Tamanho do arquivo: " . $_FILES['fotos']['size'][$key] . " bytes");
+                        error_log("DEBUG UPLOAD: Tamanho máximo permitido: " . MAX_FILE_SIZE . " bytes");
+                        
+                        if ($_FILES['fotos']['size'][$key] > MAX_FILE_SIZE) {
+                            $size_mb = round($_FILES['fotos']['size'][$key] / (1024 * 1024), 2);
+                            $max_mb = round(MAX_FILE_SIZE / (1024 * 1024), 2);
+                            error_log("DEBUG UPLOAD: Arquivo muito grande: {$size_mb}MB > {$max_mb}MB");
+                            throw new Exception("Arquivo muito grande: {$size_mb}MB. Tamanho máximo permitido: {$max_mb}MB");
+                        }
+                        
+                        error_log("DEBUG UPLOAD: Tamanho válido, prosseguindo...");
                         $new_filename = uniqid() . '.' . $ext;
+                        error_log("DEBUG UPLOAD: Novo nome do arquivo: " . $new_filename);
+                        error_log("DEBUG UPLOAD: Caminho completo: " . $upload_dir . $new_filename);
                         
                         if (move_uploaded_file($tmp_name, $upload_dir . $new_filename)) {
-                            insert("fotos_imovel", [
+                            error_log("DEBUG UPLOAD: Arquivo movido com sucesso!");
+                            
+                            // Inserir no banco de dados
+                            $foto_data = [
                                 'imovel_id' => $imovel_id,
                                 'arquivo' => $new_filename,
                                 'legenda' => cleanInput($_POST['legendas'][$key] ?? ''),
                                 'ordem' => $key + 1
-                            ]);
+                            ];
+                            error_log("DEBUG UPLOAD: Dados para inserção: " . print_r($foto_data, true));
+                            
+                            $foto_id = insert("fotos_imovel", $foto_data);
+                            if ($foto_id) {
+                                error_log("DEBUG UPLOAD: Foto inserida no banco com ID: " . $foto_id);
+                            } else {
+                                error_log("DEBUG UPLOAD: ERRO ao inserir foto no banco");
+                            }
+                        } else {
+                            error_log("DEBUG UPLOAD: ERRO ao mover arquivo: " . error_get_last()['message'] ?? 'Erro desconhecido');
+                            throw new Exception("Erro ao fazer upload do arquivo: {$filename}");
                         }
+                    } else {
+                        error_log("DEBUG UPLOAD: Erro detectado no arquivo {$key}: " . $_FILES['fotos']['error'][$key]);
+                        
+                        // Verificar erros específicos do upload
+                        $error_msg = '';
+                        switch ($_FILES['fotos']['error'][$key]) {
+                            case UPLOAD_ERR_INI_SIZE:
+                                $error_msg = "Arquivo excede upload_max_filesize";
+                                break;
+                            case UPLOAD_ERR_FORM_SIZE:
+                                $error_msg = "Arquivo excede MAX_FILE_SIZE";
+                                break;
+                            case UPLOAD_ERR_PARTIAL:
+                                $error_msg = "Upload parcial do arquivo";
+                                break;
+                            case UPLOAD_ERR_NO_FILE:
+                                $error_msg = "Nenhum arquivo foi enviado";
+                                break;
+                            case UPLOAD_ERR_NO_TMP_DIR:
+                                $error_msg = "Diretório temporário não encontrado";
+                                break;
+                            case UPLOAD_ERR_CANT_WRITE:
+                                $error_msg = "Falha ao escrever no disco";
+                                break;
+                            case UPLOAD_ERR_EXTENSION:
+                                $error_msg = "Upload parado por extensão";
+                                break;
+                            default:
+                                $error_msg = "Erro no upload do arquivo (código: " . $_FILES['fotos']['error'][$key] . ")";
+                        }
+                        
+                        error_log("DEBUG UPLOAD: Mensagem de erro: " . $error_msg);
+                        throw new Exception("Erro no upload: {$error_msg} - {$filename}");
                     }
                 }
             }
             
-            $success_message = "Imóvel cadastrado com sucesso! ID: " . $imovel_id;
+            $success_message = "Imóvel cadastrado com sucesso! ID: " . $imovel_id . " - Redirecionando para o dashboard...";
             
             // Limpar formulário
             $_POST = array();
+            
+            // Redirecionar para o dashboard usando header() - mais confiável
+            ob_end_clean(); // Limpar buffer antes do redirecionamento
+            header('Location: ../index.php?success=imovel_cadastrado&id=' . $imovel_id);
+            exit();
         } else {
             throw new Exception('Erro ao inserir imóvel no banco de dados.');
         }
@@ -212,6 +371,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php if ($success_message): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($success_message); ?>
+                        <div class="mt-2">
+                            <a href="../index.php" class="btn btn-success btn-sm me-2">
+                                <i class="fas fa-tachometer-alt me-1"></i>Ir para Dashboard
+                            </a>
+                            <a href="index.php" class="btn btn-primary btn-sm me-2">
+                                <i class="fas fa-home me-1"></i>Ver Imóveis
+                            </a>
+                            <a href="adicionar.php" class="btn btn-info btn-sm">
+                                <i class="fas fa-plus me-1"></i>Adicionar Outro
+                            </a>
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
@@ -277,15 +447,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 
                                 <div class="col-md-6">
                                     <label for="localizacao_id" class="form-label">Localização *</label>
-                                    <select class="form-select" id="localizacao_id" name="localizacao_id" required>
-                                        <option value="">Selecione...</option>
-                                        <?php foreach ($localizacoes as $localizacao): ?>
-                                            <option value="<?php echo $localizacao['id']; ?>" 
-                                                    <?php echo (isset($_POST['localizacao_id']) && $_POST['localizacao_id'] == $localizacao['id']) ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars($localizacao['bairro'] . ', ' . $localizacao['cidade']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <div class="input-group">
+                                        <select class="form-select" id="localizacao_id" name="localizacao_id" required>
+                                            <option value="">Selecione...</option>
+                                            <?php foreach ($localizacoes as $localizacao): ?>
+                                                <option value="<?php echo $localizacao['id']; ?>" 
+                                                        <?php echo (isset($_POST['localizacao_id']) && $_POST['localizacao_id'] == $localizacao['id']) ? 'selected' : ''; ?>>
+                                                    <?php echo htmlspecialchars($localizacao['cidade'] . ' - ' . ($localizacao['bairro'] ?: 'Centro') . ', ' . $localizacao['estado']); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#novaLocalizacaoModal">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i> 
+                                            Não encontrou a localização? 
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#novaLocalizacaoModal">Clique aqui para cadastrar</a>
+                                        </small>
+                                    </div>
                                     <div class="invalid-feedback">Localização é obrigatória</div>
                                 </div>
                             </div>
@@ -440,7 +622,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     
                                     <small class="text-muted">
                                         <i class="fas fa-info-circle me-1"></i>
-                                        Formatos aceitos: JPG, PNG, GIF. Máximo 5MB por foto.
+                                        Formatos aceitos: JPG, PNG, GIF, WebP. Máximo 5MB por foto.
                                     </small>
                                 </div>
                             </div>
@@ -448,13 +630,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <!-- Botões -->
                             <div class="row">
                                 <div class="col-12 text-center">
-                                    <button type="submit" class="btn btn-primary btn-lg me-3">
+                                    <button type="submit" class="btn btn-primary btn-lg me-3" id="btnSubmit">
                                         <i class="fas fa-save me-2"></i>Cadastrar Imóvel
                                     </button>
                                     <a href="index.php" class="btn btn-secondary btn-lg">
                                         <i class="fas fa-times me-2"></i>Cancelar
                                     </a>
                                 </div>
+                            </div>
+                            
+                            <!-- Debug do formulário -->
+                            <div class="mt-3 p-3 bg-light rounded">
+                                <h6>🔍 Debug do Formulário:</h6>
+                                <div id="formDebug">Aguardando envio...</div>
                             </div>
                         </form>
                     </div>
@@ -463,22 +651,216 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+    <!-- Modal Nova Localização -->
+    <div class="modal fade" id="novaLocalizacaoModal" tabindex="-1" aria-labelledby="novaLocalizacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="novaLocalizacaoModalLabel">
+                        <i class="fas fa-map-marker-alt text-primary"></i> Nova Localização
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNovaLocalizacao">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nova_cidade" class="form-label">
+                                    <i class="fas fa-city"></i> Cidade *
+                                </label>
+                                <input type="text" class="form-control" id="nova_cidade" name="cidade" required placeholder="Ex: São Paulo">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="nova_estado" class="form-label">
+                                    <i class="fas fa-flag"></i> Estado *
+                                </label>
+                                <select class="form-select" id="nova_estado" name="estado" required>
+                                    <option value="">Selecione o estado...</option>
+                                    <?php foreach ($estados_brasil as $sigla => $nome): ?>
+                                        <option value="<?php echo $sigla; ?>"><?php echo $sigla; ?> - <?php echo $nome; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nova_bairro" class="form-label">
+                                    <i class="fas fa-map"></i> Bairro
+                                </label>
+                                <input type="text" class="form-control" id="nova_bairro" name="bairro" placeholder="Ex: Jardins, Centro, Vila Madalena">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="nova_cep" class="form-label">
+                                    <i class="fas fa-mail-bulk"></i> CEP
+                                </label>
+                                <input type="text" class="form-control" id="nova_cep" name="cep" placeholder="00000-000" maxlength="9">
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-lightbulb"></i> 
+                            <strong>Dica:</strong> Cadastre apenas localizações que realmente serão utilizadas pela imobiliária.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnSalvarLocalizacao">
+                        <i class="fas fa-save"></i> Salvar Localização
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Admin JS -->
     <script src="../assets/js/admin.js"></script>
-    <!-- Dropzone JS -->
-    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+    <!-- Dropzone JS - COMENTADO PARA TESTE -->
+    <!-- <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script> -->
+    
+    <!-- Debug: Verificar se o admin.js foi carregado -->
+    <script>
+        console.log('DEBUG: Verificando carregamento do admin.js...');
+        console.log('DEBUG: typeof setupFileUploads:', typeof setupFileUploads);
+        console.log('DEBUG: typeof handleFileUpload:', typeof handleFileUpload);
+        console.log('DEBUG: typeof isValidFileType:', typeof isValidFileType);
+    </script>
     
     <script>
         // Configuração específica para esta página
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DEBUG: Página de adicionar imóvel carregada');
+            
+            // Verificar se o admin.js foi carregado
+            if (typeof isValidFileType === 'function') {
+                console.log('DEBUG: Função isValidFileType encontrada');
+                
+                // Testar validação WebP
+                const testFile = new File([''], 'test.webp', { type: 'image/webp' });
+                const result = isValidFileType(testFile);
+                console.log('DEBUG: Teste WebP - Resultado:', result);
+                
+                // Verificar extensões permitidas
+                console.log('DEBUG: Extensões permitidas na função:', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                
+                // Configurar upload de arquivos manualmente
+                console.log('DEBUG: Configurando upload de arquivos...');
+                if (typeof setupFileUploads === 'function') {
+                    setupFileUploads();
+                    console.log('DEBUG: setupFileUploads executado');
+                } else {
+                    console.error('DEBUG: setupFileUploads NÃO encontrada!');
+                }
+                
+                // Monitorar envio do formulário
+                const form = document.querySelector('form');
+                const btnSubmit = document.getElementById('btnSubmit');
+                const formDebug = document.getElementById('formDebug');
+                
+                if (form && btnSubmit) {
+                    console.log('DEBUG: Formulário encontrado:', form);
+                    console.log('DEBUG: Botão submit encontrado:', btnSubmit);
+                    
+                    // Monitorar clique no botão
+                    btnSubmit.addEventListener('click', function(e) {
+                        console.log('DEBUG: Botão submit clicado');
+                        formDebug.innerHTML = '<span class="text-info">Botão clicado - processando...</span>';
+                    });
+                    
+                    // Monitorar envio do formulário
+                    form.addEventListener('submit', function(e) {
+                        console.log('DEBUG: Evento submit disparado');
+                        
+                        // Capturar FormData no momento do envio
+                        const formData = new FormData(form);
+                        console.log('DEBUG: FormData criado');
+                        
+                        // Verificar campos individuais
+                        const titulo = form.querySelector('#titulo').value;
+                        const descricao = form.querySelector('#descricao').value;
+                        const preco = form.querySelector('#preco').value;
+                        const tipo_id = form.querySelector('#tipo_id').value;
+                        const localizacao_id = form.querySelector('#localizacao_id').value;
+                        
+                        console.log('DEBUG: Campos capturados:');
+                        console.log('- Título:', titulo);
+                        console.log('- Descrição:', descricao);
+                        console.log('- Preço:', preco);
+                        console.log('- Tipo ID:', tipo_id);
+                        console.log('- Localização ID:', localizacao_id);
+                        
+                        // Verificar se há arquivos selecionados
+                        const fileInput = form.querySelector('input[type="file"]');
+                        if (fileInput && fileInput.files.length > 0) {
+                            console.log('DEBUG: Arquivos para upload:', fileInput.files.length);
+                            Array.from(fileInput.files).forEach((file, index) => {
+                                console.log(`DEBUG: Arquivo ${index + 1}:`, file.name, file.size, file.type);
+                            });
+                        } else {
+                            console.log('DEBUG: Nenhum arquivo selecionado');
+                        }
+                        
+                        // Verificar se todos os campos obrigatórios estão preenchidos
+                        const requiredFields = form.querySelectorAll('[required]');
+                        let allRequiredFilled = true;
+                        
+                        requiredFields.forEach(field => {
+                            if (!field.value.trim()) {
+                                console.error('DEBUG: Campo obrigatório vazio:', field.name);
+                                allRequiredFilled = false;
+                            }
+                        });
+                        
+                        if (!allRequiredFilled) {
+                            console.error('DEBUG: Formulário não pode ser enviado - campos obrigatórios vazios');
+                            e.preventDefault();
+                            formDebug.innerHTML = '<span class="text-danger">Erro: Campos obrigatórios não preenchidos!</span>';
+                            return;
+                        }
+                        
+                        console.log('DEBUG: Formulário válido - enviando...');
+                        formDebug.innerHTML = '<span class="text-success">Formulário enviado - redirecionando...</span>';
+                    });
+                    
+                    // Monitorar mudanças nos campos
+                    const requiredFields = form.querySelectorAll('[required]');
+                    requiredFields.forEach(field => {
+                        field.addEventListener('change', function() {
+                            console.log('DEBUG: Campo alterado:', field.name, '=', field.value);
+                        });
+                    });
+                } else {
+                    console.error('DEBUG: Formulário ou botão não encontrado!');
+                }
+            } else {
+                console.error('DEBUG: Função isValidFileType NÃO encontrada!');
+            }
+            
             // Máscara para CEP
             const cepInput = document.getElementById('cep');
             if (cepInput) {
                 cepInput.addEventListener('input', function(e) {
                     let value = e.target.value.replace(/\D/g, '');
                     value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                    e.target.value = value;
+                });
+            }
+            
+            // Máscara para CEP da nova localização
+            const novaCepInput = document.getElementById('nova_cep');
+            if (novaCepInput) {
+                novaCepInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length > 5) {
+                        value = value.substring(0, 5) + '-' + value.substring(5, 8);
+                    }
                     e.target.value = value;
                 });
             }
@@ -494,6 +876,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 });
             }
+            
+            // Salvar nova localização
+            document.getElementById('btnSalvarLocalizacao').addEventListener('click', function() {
+                const form = document.getElementById('formNovaLocalizacao');
+                const formData = new FormData(form);
+                
+                // Validar campos obrigatórios
+                const cidade = formData.get('cidade').trim();
+                const estado = formData.get('estado');
+                
+                if (!cidade || !estado) {
+                    alert('Por favor, preencha cidade e estado.');
+                    return;
+                }
+                
+                // Enviar via AJAX
+                fetch('salvar_localizacao_ajax.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Adicionar nova opção ao select
+                        const select = document.getElementById('localizacao_id');
+                        const option = document.createElement('option');
+                        option.value = data.localizacao_id;
+                        option.text = `${cidade} - ${formData.get('bairro') || 'Centro'}, ${estado}`;
+                        option.selected = true;
+                        
+                        select.appendChild(option);
+                        
+                        // Fechar modal e limpar formulário
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('novaLocalizacaoModal'));
+                        modal.hide();
+                        form.reset();
+                        
+                        // Mostrar mensagem de sucesso
+                        alert('Localização cadastrada com sucesso!');
+                    } else {
+                        alert('Erro ao cadastrar localização: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao cadastrar localização. Tente novamente.');
+                });
+            });
         });
     </script>
 </body>

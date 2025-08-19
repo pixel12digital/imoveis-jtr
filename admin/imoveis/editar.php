@@ -3,9 +3,10 @@
 ob_start();
 
 // Carregar configurações ANTES de iniciar a sessão
-require_once '../../config/paths.php';
-require_once '../../config/database.php';
-require_once '../../config/config.php';
+$config_path = dirname(__DIR__) . '/../config/';
+require_once $config_path . 'paths.php';
+require_once $config_path . 'database.php';
+require_once $config_path . 'config.php';
 
 // Agora iniciar a sessão
 session_start();
@@ -144,7 +145,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($_FILES['novas_fotos']['tmp_name'] as $key => $tmp_name) {
                     if ($_FILES['novas_fotos']['error'][$key] === UPLOAD_ERR_OK) {
                         $filename = $_FILES['novas_fotos']['name'][$key];
-                        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+                        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                        
+                        // Validar extensão do arquivo
+                        $allowed_extensions = getAllowedExtensions();
+                        if (!in_array($ext, $allowed_extensions)) {
+                            throw new Exception("Tipo de arquivo não suportado: {$ext}. Formatos aceitos: " . implode(', ', $allowed_extensions));
+                        }
+                        
+                        // Validar tamanho do arquivo
+                        if ($_FILES['novas_fotos']['size'][$key] > MAX_FILE_SIZE) {
+                            $size_mb = round($_FILES['novas_fotos']['size'][$key] / (1024 * 1024), 2);
+                            $max_mb = round(MAX_FILE_SIZE / (1024 * 1024), 2);
+                            throw new Exception("Arquivo muito grande: {$size_mb}MB. Tamanho máximo permitido: {$max_mb}MB");
+                        }
+                        
                         $new_filename = uniqid() . '.' . $ext;
                         
                         if (move_uploaded_file($tmp_name, $upload_dir . $new_filename)) {
@@ -154,7 +169,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'legenda' => cleanInput($_POST['legendas_novas'][$key] ?? ''),
                                 'ordem' => $ordem_atual++
                             ]);
+                        } else {
+                            throw new Exception("Erro ao fazer upload do arquivo: {$filename}");
                         }
+                    } else {
+                        // Verificar erros específicos do upload
+                        $error_msg = '';
+                        switch ($_FILES['novas_fotos']['error'][$key]) {
+                            case UPLOAD_ERR_INI_SIZE:
+                            case UPLOAD_ERR_FORM_SIZE:
+                                $error_msg = "Arquivo muito grande";
+                                break;
+                            case UPLOAD_ERR_PARTIAL:
+                                $error_msg = "Upload parcial do arquivo";
+                                break;
+                            case UPLOAD_ERR_NO_FILE:
+                                $error_msg = "Nenhum arquivo foi enviado";
+                                break;
+                            default:
+                                $error_msg = "Erro no upload do arquivo";
+                        }
+                        throw new Exception("Erro no upload: {$error_msg} - {$filename}");
                     }
                 }
             }
@@ -578,7 +613,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     
                                     <small class="text-muted">
                                         <i class="fas fa-info-circle me-1"></i>
-                                        Formatos aceitos: JPG, PNG, GIF. Máximo 5MB por foto.
+                                        Formatos aceitos: JPG, PNG, GIF, WebP. Máximo 5MB por foto.
                                     </small>
                                 </div>
                             </div>

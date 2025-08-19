@@ -17,7 +17,19 @@ define('SITE_PHONE', '(11) 99999-9999');
 // Configurações de upload
 define('UPLOAD_DIR', dirname(__DIR__) . '/uploads/');
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
-define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'gif']);
+
+// Definir extensões permitidas como array
+if (!defined('ALLOWED_EXTENSIONS')) {
+    define('ALLOWED_EXTENSIONS', serialize(['jpg', 'jpeg', 'png', 'gif', 'webp']));
+}
+
+// Função para obter extensões permitidas
+function getAllowedExtensions() {
+    if (defined('ALLOWED_EXTENSIONS')) {
+        return unserialize(ALLOWED_EXTENSIONS);
+    }
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp']; // fallback
+}
 
 // Configurações de paginação
 define('ITEMS_PER_PAGE', 12);
@@ -26,7 +38,8 @@ define('ITEMS_PER_PAGE', 12);
 function cleanInput($data) {
     $data = trim($data);
     $data = stripslashes($data);
-    $data = htmlspecialchars($data);
+    // Usar ENT_QUOTES para codificar aspas corretamente
+    $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     return $data;
 }
 

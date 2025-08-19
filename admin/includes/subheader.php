@@ -52,6 +52,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], 'localizacoes') !== false ? 'active' : ''; ?>" href="../localizacoes/">
+                                <i class="fas fa-map-marker-alt me-2"></i>Localizações
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], 'usuarios') !== false ? 'active' : ''; ?>" href="../usuarios/">
                                 <i class="fas fa-users me-2"></i>Usuários
                             </a>

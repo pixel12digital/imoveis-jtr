@@ -55,16 +55,40 @@ function fetchWhere($table, $where, $params = []) {
 function insert($table, $data) {
     global $pdo;
     
-    $columns = implode(', ', array_keys($data));
-    $placeholders = ':' . implode(', :', array_keys($data));
+    error_log("DEBUG INSERT: Iniciando inserção na tabela: {$table}");
+    error_log("DEBUG INSERT: Dados recebidos: " . print_r($data, true));
     
-    $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})";
-    $stmt = $pdo->prepare($sql);
-    
-    if ($stmt->execute($data)) {
-        return $pdo->lastInsertId();
+    try {
+        $columns = implode(', ', array_keys($data));
+        $placeholders = ':' . implode(', :', array_keys($data));
+        
+        $sql = "INSERT INTO {$table} ({$columns}) VALUES ({$placeholders})";
+        error_log("DEBUG INSERT: SQL gerado: {$sql}");
+        
+        $stmt = $pdo->prepare($sql);
+        error_log("DEBUG INSERT: Statement preparado");
+        
+        $result = $stmt->execute($data);
+        error_log("DEBUG INSERT: Execute retornou: " . ($result ? 'true' : 'false'));
+        
+        if ($result) {
+            $last_id = $pdo->lastInsertId();
+            error_log("DEBUG INSERT: SUCESSO - ID inserido: {$last_id}");
+            return $last_id;
+        } else {
+            error_log("DEBUG INSERT: FALHA - Execute retornou false");
+            error_log("DEBUG INSERT: Erro PDO: " . print_r($stmt->errorInfo(), true));
+            return false;
+        }
+    } catch (Exception $e) {
+        error_log("DEBUG INSERT: EXCEÇÃO CAPTURADA: " . $e->getMessage());
+        error_log("DEBUG INSERT: Stack trace: " . $e->getTraceAsString());
+        return false;
+    } catch (PDOException $e) {
+        error_log("DEBUG INSERT: PDO EXCEÇÃO CAPTURADA: " . $e->getMessage());
+        error_log("DEBUG INSERT: Código de erro: " . $e->getCode());
+        return false;
     }
-    return false;
 }
 
 // Função para atualizar dados

@@ -16,6 +16,7 @@ Options -Indexes
     ExpiresByType image/jpg "access plus 1 month"
     ExpiresByType image/jpeg "access plus 1 month"
     ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
     ExpiresByType image/ico "access plus 1 month"
     ExpiresByType image/icon "access plus 1 month"
     ExpiresByType text/plain "access plus 1 month"

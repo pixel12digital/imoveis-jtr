@@ -283,56 +283,123 @@ function clearFieldError(field) {
  * Configurar upload de arquivos
  */
 function setupFileUploads() {
+    console.log('DEBUG: setupFileUploads chamada');
     
     const fileInputs = document.querySelectorAll('.file-upload');
-    fileInputs.forEach(input => {
+    console.log('DEBUG: File inputs encontrados:', fileInputs.length);
+    
+    fileInputs.forEach((input, index) => {
+        console.log('DEBUG: Configurando input', index, ':', input);
         input.addEventListener('change', handleFileUpload);
     });
     
     // Drag and drop para upload
     const dropZones = document.querySelectorAll('.drop-zone');
-    dropZones.forEach(zone => {
+    console.log('DEBUG: Drop zones encontradas:', dropZones.length);
+    
+    dropZones.forEach((zone, index) => {
+        console.log('DEBUG: Configurando drop zone', index, ':', zone);
         zone.addEventListener('dragover', handleDragOver);
         zone.addEventListener('drop', handleDrop);
         zone.addEventListener('dragleave', handleDragLeave);
     });
+    
+    console.log('DEBUG: setupFileUploads concluído');
 }
 
 /**
  * Manipular upload de arquivo
  */
 function handleFileUpload(e) {
+    console.log('DEBUG: handleFileUpload chamada');
+    
     const input = e.target;
     const files = input.files;
-    const preview = input.parentNode.querySelector('.file-preview');
+    
+    console.log('DEBUG: Arquivos selecionados:', files.length);
+    console.log('DEBUG: Input:', input);
+    console.log('DEBUG: Parent node:', input.parentNode);
+    
+    // Buscar o preview de forma mais robusta
+    let preview = input.parentNode.querySelector('.file-preview');
+    
+    // Se não encontrar no parent, buscar em todo o documento
+    if (!preview) {
+        preview = document.querySelector('.file-preview');
+        console.log('DEBUG: Preview encontrado no documento:', preview);
+    }
+    
+    // Se ainda não encontrar, criar o preview
+    if (!preview) {
+        console.log('DEBUG: Criando preview dinamicamente');
+        preview = document.createElement('div');
+        preview.className = 'file-preview mt-3';
+        input.parentNode.appendChild(preview);
+    }
+    
+    console.log('DEBUG: Preview final:', preview);
     
     if (files.length > 0) {
-        const file = files[0];
-        
-        // Validar tipo de arquivo
-        if (!isValidFileType(file)) {
-            showNotification('Tipo de arquivo não suportado', 'error');
-            input.value = '';
-            return;
+        // Limpar preview anterior
+        if (preview) {
+            preview.innerHTML = '';
+            console.log('DEBUG: Preview limpo');
         }
         
-        // Validar tamanho
-        if (file.size > 5 * 1024 * 1024) { // 5MB
-            showNotification('Arquivo muito grande. Máximo 5MB', 'error');
-            input.value = '';
-            return;
-        }
+        // Processar cada arquivo
+        Array.from(files).forEach((file, index) => {
+            console.log('DEBUG: Processando arquivo:', file.name, 'Tipo:', file.type, 'Tamanho:', file.size);
+            
+            // Validar tipo de arquivo
+            if (!isValidFileType(file)) {
+                console.log('DEBUG: Arquivo inválido:', file.name);
+                showNotification(`Tipo de arquivo não suportado: ${file.name}`, 'error');
+                return;
+            }
+            
+            // Validar tamanho
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                console.log('DEBUG: Arquivo muito grande:', file.name);
+                showNotification(`Arquivo muito grande: ${file.name}. Máximo 5MB`, 'error');
+                return;
+            }
+            
+            // Mostrar preview para imagens
+            if (preview && file.type.startsWith('image/')) {
+                console.log('DEBUG: Criando preview para imagem:', file.name);
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    console.log('DEBUG: FileReader carregado para:', file.name);
+                    
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item d-inline-block me-3 mb-3';
+                    previewItem.style.cssText = 'position: relative;';
+                    
+                    previewItem.innerHTML = `
+                        <img src="${e.target.result}" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" 
+                                style="transform: translate(50%, -50%);" 
+                                onclick="removeFile(this, ${index})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    
+                    preview.appendChild(previewItem);
+                    console.log('DEBUG: Preview item adicionado para:', file.name);
+                };
+                
+                reader.onerror = function() {
+                    console.error('DEBUG: Erro no FileReader para:', file.name);
+                };
+                
+                reader.readAsDataURL(file);
+            } else {
+                console.log('DEBUG: Não é imagem ou preview não encontrado:', file.type, preview);
+            }
+        });
         
-        // Mostrar preview
-        if (preview && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px;">`;
-            };
-            reader.readAsDataURL(file);
-        }
-        
-        showNotification('Arquivo selecionado com sucesso', 'success');
+        showNotification(`${files.length} arquivo(s) selecionado(s) com sucesso`, 'success');
     }
 }
 
@@ -615,8 +682,18 @@ function isValidPhone(phone) {
 }
 
 function isValidFileType(file) {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
-    return allowedTypes.includes(file.type);
+    // Verificar MIME type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedMimeTypes.includes(file.type)) {
+        return true;
+    }
+    
+    // Verificar extensão como fallback
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const fileName = file.name.toLowerCase();
+    const extension = fileName.split('.').pop();
+    
+    return allowedExtensions.includes(extension);
 }
 
 function handleDragOver(e) {
@@ -632,14 +709,48 @@ function handleDrop(e) {
     if (files.length > 0) {
         const input = e.currentTarget.querySelector('input[type="file"]');
         if (input) {
+            // Atualizar o input com os arquivos
             input.files = files;
-            input.dispatchEvent(new Event('change'));
+            
+            // Disparar evento change para processar os arquivos
+            const changeEvent = new Event('change', { bubbles: true });
+            input.dispatchEvent(changeEvent);
+            
+            // Adicionar classe visual para feedback
+            e.currentTarget.classList.add('drop-success');
+            setTimeout(() => {
+                e.currentTarget.classList.remove('drop-success');
+            }, 1000);
         }
     }
 }
 
 function handleDragLeave(e) {
     e.currentTarget.classList.remove('drag-over');
+}
+
+/**
+ * Remover arquivo do preview
+ */
+function removeFile(button, index) {
+    const previewItem = button.closest('.preview-item');
+    if (previewItem) {
+        previewItem.remove();
+        
+        // Atualizar o input de arquivo
+        const fileInput = document.querySelector('.file-upload');
+        if (fileInput && fileInput.files.length > 0) {
+            const dt = new DataTransfer();
+            Array.from(fileInput.files).forEach((file, i) => {
+                if (i !== index) {
+                    dt.items.add(file);
+                }
+            });
+            fileInput.files = dt.files;
+        }
+        
+        showNotification('Arquivo removido', 'info');
+    }
 }
 
 // ===== EXPORTAR FUNÇÕES PARA USO GLOBAL =====

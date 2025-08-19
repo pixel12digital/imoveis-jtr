@@ -56,11 +56,13 @@
                                 <i class="fas fa-users me-2"></i>Usuários
                             </a>
                         </li>
+                        <!-- Aba Contatos ocultada temporariamente
                         <li class="nav-item">
                             <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], 'contatos') !== false ? 'active' : ''; ?>" href="contatos/">
                                 <i class="fas fa-envelope me-2"></i>Contatos
                             </a>
                         </li>
+                        -->
                         <li class="nav-item">
                             <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], 'configuracoes') !== false ? 'active' : ''; ?>" href="configuracoes/">
                                 <i class="fas fa-cog me-2"></i>Configurações
