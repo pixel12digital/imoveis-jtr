@@ -1,11 +1,17 @@
 <?php
 require_once 'config/config.php';
 require_once 'config/database.php';
+require_once 'config/paths.php';
 
 echo "<h2>🔍 VERIFICANDO CAMINHOS DAS IMAGENS</h2>";
 
 try {
-    $pdo = getConnection();
+    // Usar a variável global $pdo que já está disponível
+    global $pdo;
+    
+    if (!isset($pdo)) {
+        throw new Exception("Conexão com banco não encontrada!");
+    }
     
     // Verificar estrutura da tabela fotos_imovel
     echo "<h3>📋 Estrutura da tabela fotos_imovel:</h3>";

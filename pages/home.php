@@ -290,7 +290,7 @@
                     ?>
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="property-card card h-100 shadow-sm">
-                            <div class="property-image">
+                            <div class="property-image" style="position: relative;">
                                 <?php if ($property['foto_principal']): ?>
                                     <?php 
                                     $image_url = getUploadPath($property['foto_principal']);
@@ -298,9 +298,9 @@
                                     ?>
                                         <img src="<?php echo htmlspecialchars($image_url); ?>" 
                                              class="card-img-top" alt="<?php echo htmlspecialchars($property['titulo']); ?>"
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                             style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px 8px 0 0;">
                                         <div class="no-image bg-light d-flex align-items-center justify-content-center" 
-                                             style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px 8px 0 0; display: none;">
+                                             style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px 8px 0 0; display: none; position: absolute; top: 0; left: 0; right: 0;">
                                             <div class="text-center">
                                                 <i class="fas fa-home fa-3x text-muted mb-2"></i>
                                                 <p class="text-muted small mb-0">Foto não disponível</p>

@@ -82,7 +82,7 @@ function generateSlug($string) {
 // ============================================================================
 
 // URL base das imagens na Hostinger
-define('HOSTINGER_IMAGES_URL', 'https://jtr-imoveis.com.br/uploads');
+define('HOSTINGER_IMAGES_URL', 'https://imoveisjtr.com.br/uploads');
 
 // Função para obter URL da imagem na Hostinger
 function getHostingerImageUrl($image_path) {
@@ -91,14 +91,16 @@ function getHostingerImageUrl($image_path) {
         return $image_path;
     }
     
-    // Se é um caminho relativo, construir URL completa
-    if (strpos($image_path, 'http') !== 0) {
-        // Remover 'uploads/' do início se existir
-        $clean_path = preg_replace('/^uploads\//', '', $image_path);
-        return HOSTINGER_IMAGES_URL . '/' . $clean_path;
+    // SEMPRE usar URL da Hostinger (tanto local quanto produção)
+    // Não queremos baixar pastas localmente
+    if (strpos($image_path, '/') === false) {
+        // Se é apenas o nome do arquivo, construir URL completa da Hostinger
+        return HOSTINGER_IMAGES_URL . '/imoveis/6/' . $image_path;
     }
     
-    return $image_path;
+    // Se já tem caminho, usar como está
+    $clean_path = preg_replace('/^uploads\//', '', $image_path);
+    return HOSTINGER_IMAGES_URL . '/' . $clean_path;
 }
 
 // Função para verificar se deve usar Hostinger ou local
