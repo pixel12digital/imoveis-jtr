@@ -291,9 +291,30 @@
                     <div class="col-lg-4 col-md-6 mb-4">
                         <div class="property-card card h-100 shadow-sm">
                             <div class="property-image">
-                                <?php if ($property['foto_principal'] && imageExists($property['foto_principal'])): ?>
-                                    <img src="<?php echo getUploadPath($property['foto_principal']); ?>" 
-                                         class="card-img-top" alt="<?php echo $property['titulo']; ?>">
+                                <?php if ($property['foto_principal']): ?>
+                                    <?php 
+                                    $image_url = getUploadPath($property['foto_principal']);
+                                    if ($image_url): 
+                                    ?>
+                                        <img src="<?php echo htmlspecialchars($image_url); ?>" 
+                                             class="card-img-top" alt="<?php echo htmlspecialchars($property['titulo']); ?>"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="no-image bg-light d-flex align-items-center justify-content-center" 
+                                             style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px 8px 0 0; display: none;">
+                                            <div class="text-center">
+                                                <i class="fas fa-home fa-3x text-muted mb-2"></i>
+                                                <p class="text-muted small mb-0">Foto não disponível</p>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="no-image bg-light d-flex align-items-center justify-content-center" 
+                                             style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px 8px 0 0;">
+                                            <div class="text-center">
+                                                <i class="fas fa-home fa-3x text-muted mb-2"></i>
+                                                <p class="text-muted small mb-0">Foto não disponível</p>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <div class="no-image bg-light d-flex align-items-center justify-content-center" 
                                          style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px 8px 0 0;">

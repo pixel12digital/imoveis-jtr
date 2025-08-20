@@ -76,3 +76,33 @@ function generateSlug($string) {
     $string = preg_replace('/[\s-]+/', '-', $string);
     return trim($string, '-');
 }
+
+// ============================================================================
+// CONFIGURAÇÃO DE IMAGENS - HOSTINGER
+// ============================================================================
+
+// URL base das imagens na Hostinger
+define('HOSTINGER_IMAGES_URL', 'https://jtr-imoveis.com.br/uploads');
+
+// Função para obter URL da imagem na Hostinger
+function getHostingerImageUrl($image_path) {
+    // Se o caminho já é uma URL completa, retornar como está
+    if (filter_var($image_path, FILTER_VALIDATE_URL)) {
+        return $image_path;
+    }
+    
+    // Se é um caminho relativo, construir URL completa
+    if (strpos($image_path, 'http') !== 0) {
+        // Remover 'uploads/' do início se existir
+        $clean_path = preg_replace('/^uploads\//', '', $image_path);
+        return HOSTINGER_IMAGES_URL . '/' . $clean_path;
+    }
+    
+    return $image_path;
+}
+
+// Função para verificar se deve usar Hostinger ou local
+function shouldUseHostingerImages() {
+    // Sempre usar Hostinger para imagens (banco remoto)
+    return true;
+}

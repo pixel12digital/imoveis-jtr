@@ -159,6 +159,15 @@ function getUploadPath($filename) {
         return false;
     }
     
+    // Verificar se deve usar Hostinger
+    if (function_exists('shouldUseHostingerImages') && shouldUseHostingerImages()) {
+        // Usar URL da Hostinger
+        if (function_exists('getHostingerImageUrl')) {
+            return getHostingerImageUrl($filename);
+        }
+    }
+    
+    // Fallback para verificação local
     $absolutePath = getAbsolutePath('uploads/' . ltrim($filename, '/'));
     if (file_exists($absolutePath)) {
         return getRelativePath('uploads/' . ltrim($filename, '/'));
@@ -173,6 +182,13 @@ function imageExists($filename) {
         return false;
     }
     
+    // Se estiver usando Hostinger, considerar que a imagem existe
+    // (não podemos verificar fisicamente, mas assumir que está lá)
+    if (function_exists('shouldUseHostingerImages') && shouldUseHostingerImages()) {
+        return true;
+    }
+    
+    // Verificação local
     $absolutePath = getAbsolutePath('uploads/' . ltrim($filename, '/'));
     return file_exists($absolutePath);
 }
