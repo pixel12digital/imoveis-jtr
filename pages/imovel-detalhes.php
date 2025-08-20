@@ -13,7 +13,7 @@ if (!$imovel_id) {
 // Buscar dados do imóvel
 $imovel = fetch("
     SELECT i.*, t.nome as tipo_nome, t.descricao as tipo_descricao, 
-           l.cidade, l.bairro, l.estado, l.cep,
+           l.cidade, l.bairro, l.estado, l.cep, i.tipo_negocio,
            u.nome as corretor_nome, u.email as corretor_email, u.telefone as corretor_telefone
     FROM imoveis i
     LEFT JOIN tipos_imovel t ON i.tipo_id = t.id
@@ -156,7 +156,7 @@ foreach ($caracteristicas as $carac) {
                             <span class="visually-hidden">Anterior</span>
                         </button>
                         <button class="carousel-control-next" type="button" data-bs-target="#propertyGallery" data-bs-slide="next">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Próximo</span>
                         </button>
                     </div>
@@ -377,9 +377,10 @@ foreach ($caracteristicas as $carac) {
             <div class="col-lg-4">
                 <!-- Formulário de Contato -->
                 <div class="card mb-4 sticky-top" style="top: 20px;">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-phone me-2"></i>Interessado no Imóvel?</h5>
-                    </div>
+                                         <div class="card-header bg-success text-white">
+                         <h5 class="mb-0"><i class="fab fa-whatsapp me-2"></i>Interessado no Imóvel?</h5>
+                         <small class="text-white-50">Preencha o formulário e será redirecionado para o WhatsApp correto</small>
+                     </div>
                     <div class="card-body">
                         <form id="property-contact-form">
                             <div class="mb-3">
@@ -399,9 +400,9 @@ foreach ($caracteristicas as $carac) {
                                 <textarea class="form-control" id="mensagem" name="mensagem" rows="3" 
                                           placeholder="Gostaria de saber mais sobre este imóvel..."></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-paper-plane me-2"></i>Enviar Mensagem
-                            </button>
+                                                         <button type="submit" class="btn btn-success w-100">
+                                 <i class="fab fa-whatsapp me-2"></i>Enviar para WhatsApp
+                             </button>
                         </form>
                     </div>
                 </div>
@@ -548,22 +549,128 @@ function openContactModal() {
 }
 
 function openLightbox(index) {
-    // Implementar lightbox para as fotos
-    console.log('Abrir foto:', index);
+    // Ativar o slide correspondente no carrossel principal
+    const carousel = document.getElementById('propertyGallery');
+    if (carousel) {
+        const carouselInstance = bootstrap.Carousel.getInstance(carousel);
+        if (carouselInstance) {
+            carouselInstance.to(index);
+        }
+    }
+    
+    // Atualizar indicadores ativos
+    const indicators = carousel.querySelectorAll('.carousel-indicators button');
+    indicators.forEach((indicator, i) => {
+        if (i === index) {
+            indicator.classList.add('active');
+            indicator.setAttribute('aria-current', 'true');
+        } else {
+            indicator.classList.remove('active');
+            indicator.setAttribute('aria-current', 'false');
+        }
+    });
+    
+    // Atualizar classes dos slides
+    const slides = carousel.querySelectorAll('.carousel-item');
+    slides.forEach((slide, i) => {
+        if (i === index) {
+            slide.classList.add('active');
+        } else {
+            slide.classList.remove('active');
+        }
+    });
 }
 
 // Formulário de contato
 document.getElementById('property-contact-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    const formData = new FormData(this);
-    formData.append('imovel_id', <?php echo $imovel['id']; ?>);
-    formData.append('assunto', 'Interesse no imóvel: <?php echo addslashes($imovel['titulo']); ?>');
+    // Obter dados do formulário
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const telefone = document.getElementById('telefone').value;
+    const mensagem = document.getElementById('mensagem').value;
     
-    // Aqui você implementaria o envio AJAX
-    JTRImoveis.showNotification('Mensagem enviada com sucesso! Entraremos em contato em breve.', 'success');
+    // Determinar WhatsApp baseado no tipo de negócio do imóvel
+    const tipoNegocio = '<?php echo $imovel['tipo_negocio']; ?>';
+    let whatsappNumber;
+    let whatsappText;
+    
+    if (tipoNegocio === 'locacao') {
+        whatsappNumber = '<?php echo PHONE_WHATSAPP_LOCACAO; ?>';
+        whatsappText = `Olá! Gostaria de saber mais sobre o imóvel para *LOCAÇÃO*: <?php echo addslashes($imovel['titulo']); ?>
+
+*Dados do Interessado:*
+Nome: ${nome}
+E-mail: ${email}
+Telefone: ${telefone}
+
+*Mensagem:*
+${mensagem}
+
+*Detalhes do Imóvel:*
+Preço: <?php echo formatPrice($imovel['preco']); ?>
+Localização: <?php echo $imovel['cidade']; ?>
+Quartos: <?php echo $imovel['quartos']; ?>
+Banheiros: <?php echo $imovel['banheiros']; ?>
+Área: <?php echo $imovel['area_total']; ?>m²`;
+    } else {
+        // Padrão para venda
+        whatsappNumber = '<?php echo PHONE_WHATSAPP_VENDA; ?>';
+        whatsappText = `Olá! Gostaria de saber mais sobre o imóvel para *VENDA*: <?php echo addslashes($imovel['titulo']); ?>
+
+*Dados do Interessado:*
+Nome: ${nome}
+E-mail: ${email}
+Telefone: ${telefone}
+
+*Mensagem:*
+${mensagem}
+
+*Detalhes do Imóvel:*
+Preço: <?php echo formatPrice($imovel['preco']); ?>
+Localização: <?php echo $imovel['cidade']; ?>
+Quartos: <?php echo $imovel['quartos']; ?>
+Banheiros: <?php echo $imovel['banheiros']; ?>
+Área: <?php echo $imovel['area_total']; ?>m²`;
+    }
+    
+    // Redirecionar para WhatsApp com mensagem formatada
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappText)}`;
+    window.open(whatsappUrl, '_blank');
+    
+    // Mostrar notificação de sucesso
+    JTRImoveis.showNotification('Redirecionando para WhatsApp!', 'success');
+    
+    // Resetar formulário
     this.reset();
 });
+
+// Sincronizar carrossel principal com miniaturas
+document.addEventListener('DOMContentLoaded', function() {
+    const carousel = document.getElementById('propertyGallery');
+    if (carousel) {
+        carousel.addEventListener('slid.bs.carousel', function(event) {
+            const activeIndex = event.to;
+            updateThumbnailActive(activeIndex);
+        });
+        
+        // Inicializar primeira miniatura como ativa
+        updateThumbnailActive(0);
+    }
+});
+
+function updateThumbnailActive(activeIndex) {
+    // Remover classe ativa de todas as miniaturas
+    const thumbnails = document.querySelectorAll('.thumbnail-item');
+    thumbnails.forEach((thumbnail, index) => {
+        if (index === activeIndex) {
+            thumbnail.classList.add('active');
+        } else {
+            thumbnail.classList.remove('active');
+        }
+    });
+}
 </script>
 
 
