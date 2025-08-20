@@ -111,9 +111,10 @@ $sql .= " ORDER BY i.data_criacao DESC LIMIT " . (int)$por_pagina . " OFFSET " .
 $imoveis = fetchAll($sql, []);
 
 // Total de registros para paginação
-$sql_count = str_replace("SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, u.nome as corretor_nome", "SELECT COUNT(*)", $sql);
+$sql_count = str_replace("SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, u.nome as corretor_nome", "SELECT COUNT(*) as total", $sql);
 $sql_count = preg_replace('/ORDER BY.*LIMIT.*OFFSET.*/', '', $sql_count);
-$total_imoveis = fetch($sql_count, $params)['total'];
+$result_count = fetch($sql_count, $params);
+$total_imoveis = $result_count ? $result_count['total'] : 0;
 $total_paginas = ceil($total_imoveis / $por_pagina);
 
 // Buscar tipos e cidades para filtros
@@ -293,8 +294,8 @@ $cidades = fetchAll("SELECT DISTINCT cidade FROM localizacoes ORDER BY cidade");
                     </div>
                     <div class="card-body">
                         <?php if ($imoveis): ?>
-                            <div class="table-responsive">
-                                <table class="table table-hover">
+                                                         <div class="table-responsive">
+                                 <table class="table table-hover table-imoveis">
                                     <thead>
                                         <tr>
                                             <th>ID</th>

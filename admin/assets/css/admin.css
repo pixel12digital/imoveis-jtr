@@ -42,18 +42,22 @@ body {
 }
 
 .sidebar .nav-link {
-    color: #495057;
+    color: #2c3e50;
     padding: 0.75rem 1rem;
     font-weight: 600;
     border-radius: 0.35rem;
     margin: 0.2rem 0.5rem;
     transition: all 0.2s ease;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(29, 76, 52, 0.1);
 }
 
 .sidebar .nav-link:hover {
     color: var(--primary-color);
     background-color: rgba(29, 76, 52, 0.1);
     transform: translateX(5px);
+    border-color: rgba(29, 76, 52, 0.3);
+    box-shadow: 0 2px 4px rgba(29, 76, 52, 0.1);
 }
 
 .sidebar .nav-link.active {
@@ -61,16 +65,64 @@ body {
     background-color: var(--primary-color) !important;
     border-left: 4px solid #ffffff;
     box-shadow: 0 2px 8px rgba(29, 76, 52, 0.3);
+    border-color: var(--primary-color);
 }
 
 .sidebar .nav-link.active:hover {
     background-color: var(--secondary-color) !important;
     transform: translateX(5px);
+    border-color: var(--secondary-color);
+}
+
+/* Melhorar visibilidade dos links não ativos */
+.sidebar .nav-link:not(.active) {
+    color: #34495e !important;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.sidebar .nav-link:not(.active):hover {
+    color: var(--primary-color) !important;
+    text-shadow: none;
+}
+
+/* Adicionar separador visual entre grupos de menu */
+.sidebar .nav-item:not(:last-child) {
+    margin-bottom: 0.5rem;
+}
+
+/* Efeito de destaque para o item ativo */
+.sidebar .nav-link.active {
+    position: relative;
+    z-index: 10;
+}
+
+.sidebar .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.8) 100%);
+    border-radius: 0 2px 2px 0;
 }
 
 .sidebar .nav-link i {
     width: 20px;
     text-align: center;
+    color: inherit;
+    opacity: 0.9;
+}
+
+.sidebar .nav-link:hover i {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.sidebar .nav-link.active i {
+    opacity: 1;
+    color: #ffffff;
 }
 
 /* ===== MAIN CONTENT ===== */
@@ -162,6 +214,286 @@ main {
     border-radius: 0.75rem;
     overflow: hidden;
     box-shadow: 0 0.15rem 1.75rem 0 rgba(29, 76, 52, 0.15);
+    width: 100%;
+    table-layout: auto;
+}
+
+/* Tabela de Imóveis Recentes - Otimizada para largura total */
+.table-responsive {
+    overflow-x: auto;
+    min-width: 100%;
+}
+
+/* Forçar layout fixo para todas as tabelas */
+.table {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+
+/* Controle rigoroso das larguras das colunas */
+.table th,
+.table td {
+    padding: 0.75rem 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Células específicas para tabela de imóveis */
+.table-imoveis th,
+.table-imoveis td {
+    padding: 0.6rem 0.4rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.table-imoveis td:nth-child(2) {
+    text-align: left;
+}
+
+.table-imoveis td:nth-child(1),
+.table-imoveis td:nth-child(3),
+.table-imoveis td:nth-child(5),
+.table-imoveis td:nth-child(6),
+.table-imoveis td:nth-child(7),
+.table-imoveis td:nth-child(8) {
+    text-align: center;
+}
+
+/* ===== TABELA DE IMÓVEIS - LAYOUT ESPECÍFICO ===== */
+
+/* Tabela de imóveis com 8 colunas */
+.table-imoveis {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+
+/* Definir larguras específicas para cada coluna da tabela de imóveis */
+.table-imoveis th:nth-child(1), .table-imoveis td:nth-child(1) { /* ID */
+    width: 5%;
+    max-width: 0;
+    text-align: center;
+}
+
+.table-imoveis th:nth-child(2), .table-imoveis td:nth-child(2) { /* Título */
+    width: 25%;
+    max-width: 0;
+}
+
+.table-imoveis th:nth-child(3), .table-imoveis td:nth-child(3) { /* Tipo */
+    width: 10%;
+    max-width: 0;
+    text-align: center;
+}
+
+.table-imoveis th:nth-child(4), .table-imoveis td:nth-child(4) { /* Localização */
+    width: 20%;
+    max-width: 0;
+}
+
+.table-imoveis th:nth-child(5), .table-imoveis td:nth-child(5) { /* Preço */
+    width: 12%;
+    max-width: 0;
+    text-align: center;
+}
+
+.table-imoveis th:nth-child(6), .table-imoveis td:nth-child(6) { /* Status */
+    width: 10%;
+    max-width: 0;
+    text-align: center;
+}
+
+.table-imoveis th:nth-child(7), .table-imoveis td:nth-child(7) { /* Destaque */
+    width: 8%;
+    max-width: 0;
+    text-align: center;
+}
+
+.table-imoveis th:nth-child(8), .table-imoveis td:nth-child(8) { /* Ações */
+    width: 10%;
+    max-width: 0;
+    text-align: center;
+}
+
+/* Permitir expansão do texto ao hover na coluna de título */
+.table-imoveis td:nth-child(2):hover {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    z-index: 10;
+    position: relative;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Estilos específicos para elementos da tabela de imóveis */
+.table-imoveis .badge {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table-imoveis .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    justify-content: center;
+}
+
+.table-imoveis .btn-group .btn {
+    flex: 1;
+    min-width: 32px;
+    padding: 0.25rem 0.5rem;
+    margin: 0 0.1rem;
+}
+
+/* Melhorar exibição dos selects de status */
+.table-imoveis .form-select-sm {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+    min-width: 80px;
+}
+
+/* Melhorar exibição do preço */
+.table-imoveis .text-primary {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Melhorar exibição da localização */
+.table-imoveis .fa-map-marker-alt {
+    margin-right: 0.3rem;
+}
+
+/* Melhorar exibição do corretor */
+.table-imoveis .text-muted {
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 1400px) {
+    .table-imoveis th:nth-child(1), .table-imoveis td:nth-child(1) { /* ID */
+        width: 6%;
+    }
+    
+    .table-imoveis th:nth-child(2), .table-imoveis td:nth-child(2) { /* Título */
+        width: 24%;
+    }
+    
+    .table-imoveis th:nth-child(3), .table-imoveis td:nth-child(3) { /* Tipo */
+        width: 12%;
+    }
+    
+    .table-imoveis th:nth-child(4), .table-imoveis td:nth-child(4) { /* Localização */
+        width: 18%;
+    }
+    
+    .table-imoveis th:nth-child(5), .table-imoveis td:nth-child(5) { /* Preço */
+        width: 14%;
+    }
+    
+    .table-imoveis th:nth-child(6), .table-imoveis td:nth-child(6) { /* Status */
+        width: 12%;
+    }
+    
+    .table-imoveis th:nth-child(7), .table-imoveis td:nth-child(7) { /* Destaque */
+        width: 8%;
+    }
+    
+    .table-imoveis th:nth-child(8), .table-imoveis td:nth-child(8) { /* Ações */
+        width: 6%;
+    }
+}
+
+@media (max-width: 1200px) {
+    .table-imoveis th:nth-child(1), .table-imoveis td:nth-child(1) { /* ID */
+        width: 7%;
+    }
+    
+    .table-imoveis th:nth-child(2), .table-imoveis td:nth-child(2) { /* Título */
+        width: 22%;
+    }
+    
+    .table-imoveis th:nth-child(3), .table-imoveis td:nth-child(3) { /* Tipo */
+        width: 13%;
+    }
+    
+    .table-imoveis th:nth-child(4), .table-imoveis td:nth-child(4) { /* Localização */
+        width: 16%;
+    }
+    
+    .table-imoveis th:nth-child(5), .table-imoveis td:nth-child(5) { /* Preço */
+        width: 15%;
+    }
+    
+    .table-imoveis th:nth-child(6), .table-imoveis td:nth-child(6) { /* Status */
+        width: 13%;
+    }
+    
+    .table-imoveis th:nth-child(7), .table-imoveis td:nth-child(7) { /* Destaque */
+        width: 8%;
+    }
+    
+    .table-imoveis th:nth-child(8), .table-imoveis td:nth-child(8) { /* Ações */
+        width: 6%;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    .table-imoveis th, .table-imoveis td {
+        padding: 0.3rem 0.15rem;
+    }
+    
+    .table-imoveis .btn-group .btn {
+        padding: 0.2rem 0.3rem;
+        font-size: 0.7rem;
+        min-width: 28px;
+    }
+    
+    /* Ajustar larguras para mobile */
+    .table-imoveis th:nth-child(1), .table-imoveis td:nth-child(1) { /* ID */
+        width: 8%;
+    }
+    
+    .table-imoveis th:nth-child(2), .table-imoveis td:nth-child(2) { /* Título */
+        width: 20%;
+    }
+    
+    .table-imoveis th:nth-child(3), .table-imoveis td:nth-child(3) { /* Tipo */
+        width: 15%;
+    }
+    
+    .table-imoveis th:nth-child(4), .table-imoveis td:nth-child(4) { /* Localização */
+        width: 18%;
+    }
+    
+    .table-imoveis th:nth-child(5), .table-imoveis td:nth-child(5) { /* Preço */
+        width: 12%;
+    }
+    
+    .table-imoveis th:nth-child(6), .table-imoveis td:nth-child(6) { /* Status */
+        width: 10%;
+    }
+    
+    .table-imoveis th:nth-child(7), .table-imoveis td:nth-child(7) { /* Destaque */
+        width: 7%;
+    }
+    
+    .table-imoveis th:nth-child(8), .table-imoveis td:nth-child(8) { /* Ações */
+        width: 10%;
+    }
 }
 
 .table thead th {
@@ -172,6 +504,22 @@ main {
     text-transform: uppercase;
     font-size: 0.8rem;
     letter-spacing: 0.5px;
+}
+
+/* Cabeçalhos específicos para tabela de imóveis */
+.table-imoveis thead th {
+    font-size: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-imoveis thead th:first-child {
+    text-align: center;
+}
+
+.table-imoveis thead th:nth-child(2) {
+    text-align: left;
 }
 
 .table tbody tr:hover {
@@ -480,4 +828,178 @@ main {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* ===== SISTEMA DE FOTOS COM DRAG & DROP ===== */
+
+.fotos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.foto-item {
+    cursor: move;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.foto-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.foto-item.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+    z-index: 1000;
+}
+
+.foto-item.drag-over {
+    border: 2px dashed var(--primary-color);
+    background-color: rgba(29, 76, 52, 0.1);
+}
+
+.foto-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.foto-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.ordem-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+
+.foto-actions {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.foto-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.foto-image {
+    position: relative;
+    height: 150px;
+    overflow: hidden;
+}
+
+.foto-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.foto-item:hover .foto-image img {
+    transform: scale(1.05);
+}
+
+.foto-footer {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+}
+
+.foto-footer small {
+    font-size: 0.7rem;
+    word-break: break-all;
+}
+
+/* Estilos para foto principal */
+.foto-item[data-ordem="1"] .foto-card {
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 16px rgba(29, 76, 52, 0.2);
+}
+
+.foto-item[data-ordem="1"] .ordem-badge {
+    background: var(--success-color);
+}
+
+.foto-item[data-ordem="1"] .foto-principal {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .fotos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .foto-image {
+        height: 120px;
+    }
+    
+    .foto-actions .btn {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.7rem;
+    }
+}
+
+/* Animações de drag & drop */
+@keyframes dragPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.foto-item.dragging {
+    animation: dragPulse 0.6s ease infinite;
+}
+
+/* Feedback visual para reordenação */
+.foto-item.reordering {
+    transition: all 0.3s ease;
+}
+
+.foto-item.reordering .ordem-badge {
+    background: var(--warning-color);
+    animation: pulse 1s ease infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Animações para exclusão de fotos */
+@keyframes fadeOut {
+    0% { 
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% { 
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+.foto-item.fade-out {
+    animation: fadeOut 0.3s ease forwards;
 }

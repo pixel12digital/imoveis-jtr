@@ -389,8 +389,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label for="preco" class="form-label">Preço *</label>
                                     <div class="input-group">
                                         <span class="input-group-text">R$</span>
-                                        <input type="number" class="form-control" id="preco" name="preco" 
-                                               step="0.01" min="0" 
+                                        <input type="text" class="form-control" id="preco" name="preco" 
+                                               placeholder="0,00" 
                                                value="<?php echo htmlspecialchars($imovel['preco']); ?>" required>
                                     </div>
                                     <div class="invalid-feedback">Preço é obrigatório</div>
@@ -560,31 +560,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="col-12">
                                     <h6 class="text-primary mb-3">
                                         <i class="fas fa-images me-2"></i>Fotos Existentes
+                                        <small class="text-muted ms-2">(Arraste para reordenar)</small>
                                     </h6>
                                 </div>
                                 
                                 <div class="col-12">
-                                    <div class="row">
+                                    <div class="fotos-grid" id="fotosGrid">
                                         <?php foreach ($fotos_imovel as $foto): ?>
-                                            <div class="col-md-3 mb-3">
-                                                <div class="card">
-                                                    <img src="../../uploads/imoveis/<?php echo $imovel_id; ?>/<?php echo $foto['arquivo']; ?>" 
-                                                         class="card-img-top" alt="Foto do imóvel" style="height: 150px; object-fit: cover;">
-                                                    <div class="card-body">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" 
-                                                                   name="excluir_fotos[]" 
-                                                                   value="<?php echo $foto['id']; ?>" 
-                                                                   id="excluir_<?php echo $foto['id']; ?>">
-                                                            <label class="form-check-label text-danger" for="excluir_<?php echo $foto['id']; ?>">
-                                                                <i class="fas fa-trash me-1"></i>Excluir
-                                                            </label>
+                                            <div class="foto-item" data-foto-id="<?php echo $foto['id']; ?>" data-ordem="<?php echo $foto['ordem']; ?>">
+                                                <div class="foto-card">
+                                                    <div class="foto-header">
+                                                        <span class="ordem-badge"><?php echo $foto['ordem']; ?></span>
+                                                        <div class="foto-actions">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary foto-principal" 
+                                                                    data-foto-id="<?php echo $foto['id']; ?>" 
+                                                                    title="Definir como foto principal"
+                                                                    <?php echo ($foto['ordem'] == 1) ? 'disabled' : ''; ?>>
+                                                                <i class="fas fa-star"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger excluir-foto" 
+                                                                    data-foto-id="<?php echo $foto['id']; ?>" 
+                                                                    title="Excluir foto">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
                                                         </div>
-                                                        <small class="text-muted">Ordem: <?php echo $foto['ordem']; ?></small>
+                                                    </div>
+                                                    <div class="foto-image">
+                                                        <img src="../../uploads/imoveis/<?php echo $imovel_id; ?>/<?php echo $foto['arquivo']; ?>" 
+                                                             alt="Foto do imóvel" 
+                                                             class="img-fluid">
+                                                    </div>
+                                                    <div class="foto-footer">
+                                                        <small class="text-muted"><?php echo $foto['arquivo']; ?></small>
+                                                        <input type="hidden" name="ordem_fotos[]" value="<?php echo $foto['id']; ?>:<?php echo $foto['ordem']; ?>">
                                                     </div>
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-outline-success btn-sm" id="salvarOrdem">
+                                            <i class="fas fa-save me-2"></i>Salvar Nova Ordem
+                                        </button>
+                                        <small class="text-muted ms-3">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            A primeira foto será exibida como foto principal
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -644,8 +666,269 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
     
     <script>
+        // Sistema de Drag & Drop para Fotos
+        class FotoManager {
+            constructor() {
+                this.fotosGrid = document.getElementById('fotosGrid');
+                this.draggedElement = null;
+                this.init();
+            }
+            
+            init() {
+                if (this.fotosGrid) {
+                    this.setupDragAndDrop();
+                    this.setupEventListeners();
+                }
+            }
+            
+            setupDragAndDrop() {
+                const fotoItems = this.fotosGrid.querySelectorAll('.foto-item');
+                
+                fotoItems.forEach(item => {
+                    item.setAttribute('draggable', true);
+                    
+                    item.addEventListener('dragstart', (e) => this.handleDragStart(e));
+                    item.addEventListener('dragend', (e) => this.handleDragEnd(e));
+                    item.addEventListener('dragover', (e) => this.handleDragOver(e));
+                    item.addEventListener('drop', (e) => this.handleDrop(e));
+                    item.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+                    item.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+                });
+            }
+            
+            setupEventListeners() {
+                // Botão salvar ordem
+                const salvarOrdemBtn = document.getElementById('salvarOrdem');
+                if (salvarOrdemBtn) {
+                    salvarOrdemBtn.addEventListener('click', () => this.salvarNovaOrdem());
+                }
+                
+                // Botões de ação das fotos
+                this.setupFotoActions();
+            }
+            
+            setupFotoActions() {
+                // Botões de foto principal
+                document.querySelectorAll('.foto-principal').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.definirFotoPrincipal(e));
+                });
+                
+                // Botões de exclusão
+                document.querySelectorAll('.excluir-foto').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.excluirFoto(e));
+                });
+            }
+            
+            handleDragStart(e) {
+                this.draggedElement = e.target.closest('.foto-item');
+                this.draggedElement.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', this.draggedElement.outerHTML);
+            }
+            
+            handleDragEnd(e) {
+                this.draggedElement.classList.remove('dragging');
+                this.draggedElement = null;
+                
+                // Remover classes de drag over de todos os itens
+                document.querySelectorAll('.foto-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+            }
+            
+            handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            }
+            
+            handleDragEnter(e) {
+                e.preventDefault();
+                const targetItem = e.target.closest('.foto-item');
+                if (targetItem && targetItem !== this.draggedElement) {
+                    targetItem.classList.add('drag-over');
+                }
+            }
+            
+            handleDragLeave(e) {
+                const targetItem = e.target.closest('.foto-item');
+                if (targetItem) {
+                    targetItem.classList.remove('drag-over');
+                }
+            }
+            
+            handleDrop(e) {
+                e.preventDefault();
+                const targetItem = e.target.closest('.foto-item');
+                
+                if (targetItem && this.draggedElement && targetItem !== this.draggedElement) {
+                    // Trocar posições
+                    this.swapItems(this.draggedElement, targetItem);
+                    this.updateOrdens();
+                }
+                
+                // Remover classes de drag over
+                document.querySelectorAll('.foto-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+            }
+            
+            swapItems(item1, item2) {
+                const parent = item1.parentNode;
+                const next1 = item1.nextSibling;
+                const next2 = item2.nextSibling;
+                
+                if (next1 === item2) {
+                    parent.insertBefore(item2, item1);
+                } else if (next2 === item1) {
+                    parent.insertBefore(item1, item2);
+                } else {
+                    parent.insertBefore(item1, next2);
+                    parent.insertBefore(item2, next1);
+                }
+            }
+            
+            updateOrdens() {
+                const fotoItems = this.fotosGrid.querySelectorAll('.foto-item');
+                fotoItems.forEach((item, index) => {
+                    const ordem = index + 1;
+                    item.setAttribute('data-ordem', ordem);
+                    
+                    // Atualizar badge de ordem
+                    const badge = item.querySelector('.ordem-badge');
+                    if (badge) {
+                        badge.textContent = ordem;
+                    }
+                    
+                    // Atualizar input hidden
+                    const input = item.querySelector('input[name="ordem_fotos[]"]');
+                    if (input) {
+                        const fotoId = item.getAttribute('data-foto-id');
+                        input.value = `${fotoId}:${ordem}`;
+                    }
+                    
+                    // Atualizar botão de foto principal
+                    const btnPrincipal = item.querySelector('.foto-principal');
+                    if (btnPrincipal) {
+                        if (ordem === 1) {
+                            btnPrincipal.disabled = true;
+                            btnPrincipal.classList.add('btn-success');
+                            btnPrincipal.classList.remove('btn-outline-primary');
+                        } else {
+                            btnPrincipal.disabled = false;
+                            btnPrincipal.classList.remove('btn-success');
+                            btnPrincipal.classList.add('btn-outline-primary');
+                        }
+                    }
+                    
+                    // Adicionar classe de reordenação
+                    item.classList.add('reordering');
+                    setTimeout(() => item.classList.remove('reordering'), 1000);
+                });
+            }
+            
+            definirFotoPrincipal(e) {
+                const btn = e.target.closest('.foto-principal');
+                const fotoItem = btn.closest('.foto-item');
+                const fotoId = fotoItem.getAttribute('data-foto-id');
+                
+                // Mover para primeira posição
+                const firstItem = this.fotosGrid.querySelector('.foto-item');
+                if (firstItem !== fotoItem) {
+                    this.fotosGrid.insertBefore(fotoItem, firstItem);
+                    this.updateOrdens();
+                }
+                
+                // Mostrar feedback
+                this.showNotification('Foto definida como foto principal!', 'success');
+            }
+            
+            excluirFoto(e) {
+                const btn = e.target.closest('.excluir-foto');
+                const fotoItem = btn.closest('.foto-item');
+                const fotoId = fotoItem.getAttribute('data-foto-id');
+                
+                if (confirm('Tem certeza que deseja excluir esta foto?')) {
+                    // Adicionar input hidden para exclusão
+                    const form = document.querySelector('form');
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'excluir_fotos[]';
+                    input.value = fotoId;
+                    form.appendChild(input);
+                    
+                    // Remover visualmente
+                    fotoItem.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => {
+                        fotoItem.remove();
+                        this.updateOrdens();
+                    }, 300);
+                    
+                    this.showNotification('Foto removida!', 'success');
+                }
+            }
+            
+            salvarNovaOrdem() {
+                const fotoItems = this.fotosGrid.querySelectorAll('.foto-item');
+                const novaOrdem = [];
+                
+                fotoItems.forEach((item, index) => {
+                    const fotoId = item.getAttribute('data-foto-id');
+                    const ordem = index + 1;
+                    novaOrdem.push({ id: fotoId, ordem: ordem });
+                });
+                
+                // Aqui você pode enviar via AJAX ou incluir no formulário
+                console.log('Nova ordem:', novaOrdem);
+                this.showNotification('Ordem salva com sucesso!', 'success');
+                
+                // Atualizar inputs hidden do formulário
+                this.updateFormInputs(novaOrdem);
+            }
+            
+            updateFormInputs(novaOrdem) {
+                // Remover inputs antigos
+                const inputsAntigos = document.querySelectorAll('input[name="ordem_fotos[]"]');
+                inputsAntigos.forEach(input => input.remove());
+                
+                // Adicionar novos inputs
+                const form = document.querySelector('form');
+                novaOrdem.forEach(({ id, ordem }) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ordem_fotos[]';
+                    input.value = `${id}:${ordem}`;
+                    form.appendChild(input);
+                });
+            }
+            
+            showNotification(message, type = 'info') {
+                // Criar notificação simples
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                notification.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remover após 3 segundos
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 3000);
+            }
+        }
+        
         // Configuração específica para esta página
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar gerenciador de fotos
+            if (document.getElementById('fotosGrid')) {
+                new FotoManager();
+            }
+            
             // Máscara para CEP
             const cepInput = document.getElementById('cep');
             if (cepInput) {
@@ -666,19 +949,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         this.setCustomValidity('');
                     }
                 });
-            }
-            
-            // Confirmação para exclusão de fotos
-            const checkboxesExcluir = document.querySelectorAll('input[name="excluir_fotos[]"]');
-            checkboxesExcluir.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        if (!confirm('Tem certeza que deseja excluir esta foto?')) {
-                            this.checked = false;
-                        }
+                
+                // Converter preço formatado antes de enviar o formulário
+                const form = document.querySelector('form');
+                form.addEventListener('submit', function(e) {
+                    if (precoInput.value) {
+                        // Converter o preço formatado para número antes de enviar
+                        const numericValue = window.AdminPanel.convertFormattedPriceToNumber(precoInput.value);
+                        precoInput.value = numericValue;
                     }
                 });
-            });
+            }
         });
     </script>
 </body>

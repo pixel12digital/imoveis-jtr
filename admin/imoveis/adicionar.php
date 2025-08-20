@@ -422,8 +422,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label for="preco" class="form-label">Preço *</label>
                                     <div class="input-group">
                                         <span class="input-group-text">R$</span>
-                                        <input type="number" class="form-control" id="preco" name="preco" 
-                                               step="0.01" min="0" 
+                                        <input type="text" class="form-control" id="preco" name="preco" 
+                                               placeholder="0,00" 
                                                value="<?php echo htmlspecialchars($_POST['preco'] ?? ''); ?>" required>
                                     </div>
                                     <div class="invalid-feedback">Preço é obrigatório</div>
@@ -873,6 +873,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         this.setCustomValidity('Preço deve ser maior que zero');
                     } else {
                         this.setCustomValidity('');
+                    }
+                });
+                
+                // Converter preço formatado antes de enviar o formulário
+                const form = document.querySelector('form');
+                form.addEventListener('submit', function(e) {
+                    if (precoInput.value) {
+                        // Converter o preço formatado para número antes de enviar
+                        const numericValue = window.AdminPanel.convertFormattedPriceToNumber(precoInput.value);
+                        precoInput.value = numericValue;
                     }
                 });
             }

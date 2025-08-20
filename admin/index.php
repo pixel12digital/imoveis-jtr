@@ -155,10 +155,10 @@ include 'includes/header.php';
     -->
 </div>
 
-<!-- Conteúdo em Duas Colunas -->
+<!-- Conteúdo em Largura Total -->
 <div class="row">
     <!-- Imóveis Recentes -->
-    <div class="col-xl-8 col-lg-7">
+    <div class="col-12">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">

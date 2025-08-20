@@ -21,7 +21,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setupTooltips();
     
     // ===== VALIDAÇÕES DE FORMULÁRIO =====
-    setupFormValidations();
+setupFormValidations();
+
+// ===== FORMATAÇÃO DE PREÇOS =====
+setupPriceFormatting();
     
     // ===== UPLOAD DE ARQUIVOS =====
     setupFileUploads();
@@ -753,11 +756,174 @@ function removeFile(button, index) {
     }
 }
 
+/**
+ * Configurar formatação de preços no padrão brasileiro
+ */
+function setupPriceFormatting() {
+    const priceInputs = document.querySelectorAll('input[name="preco"], input[id="preco"]');
+    
+    priceInputs.forEach(input => {
+        // Formatar valor inicial se existir
+        if (input.value) {
+            input.value = formatPriceForInput(input.value);
+        }
+        
+        // Formatar ao perder o foco
+        input.addEventListener('blur', function() {
+            if (this.value) {
+                this.value = formatPriceForInput(this.value);
+            }
+        });
+        
+        // Formatar ao digitar em tempo real (mais suave)
+        input.addEventListener('input', function() {
+            // Obter o valor atual e a posição do cursor
+            let currentValue = this.value;
+            let cursorPosition = this.selectionStart;
+            
+            // Se o usuário está digitando no meio do campo, não formatar
+            if (cursorPosition < currentValue.length) {
+                return;
+            }
+            
+            // Remover tudo exceto números
+            let cleanValue = currentValue.replace(/[^\d]/g, '');
+            
+            // Se não há valor, não fazer nada
+            if (!cleanValue) {
+                return;
+            }
+            
+            // Formatar em tempo real apenas se o usuário está no final
+            let formattedValue = formatPriceRealTime(cleanValue);
+            
+            // Atualizar o campo apenas se o valor mudou e o cursor está no final
+            if (formattedValue !== currentValue && cursorPosition === currentValue.length) {
+                this.value = formattedValue;
+                
+                // Manter o cursor no final após formatação
+                this.setSelectionRange(formattedValue.length, formattedValue.length);
+            }
+        });
+        
+        // Formatar ao ganhar o foco (remover formatação para edição)
+        input.addEventListener('focus', function() {
+            if (this.value) {
+                this.value = this.value.replace(/\./g, '').replace(',', '.');
+            }
+        });
+    });
+}
+
+/**
+ * Formatar preço em tempo real durante a digitação (versão suave)
+ * @param {string} value - Valor numérico limpo
+ * @returns {string} - Valor formatado em tempo real
+ */
+function formatPriceRealTime(value) {
+    // Se não há valor, retornar vazio
+    if (!value) {
+        return '';
+    }
+    
+    // Converter para string e garantir que seja apenas números
+    let cleanValue = String(value).replace(/[^\d]/g, '');
+    
+    // Se não há números, retornar vazio
+    if (!cleanValue) {
+        return '';
+    }
+    
+    // Formatar em tempo real (versão mais suave)
+    let formattedValue = '';
+    
+    // Para valores pequenos (1-2 dígitos), não adicionar formatação
+    if (cleanValue.length <= 2) {
+        return cleanValue;
+    }
+    
+    // Para valores médios (3-5 dígitos), adicionar apenas vírgula
+    if (cleanValue.length <= 5) {
+        formattedValue = cleanValue.slice(0, -2) + ',' + cleanValue.slice(-2);
+        return formattedValue;
+    }
+    
+    // Para valores grandes (6+ dígitos), adicionar pontos e vírgula
+    let tempValue = cleanValue;
+    
+    // Adicionar vírgula para decimais
+    if (tempValue.length > 2) {
+        tempValue = tempValue.slice(0, -2) + ',' + tempValue.slice(-2);
+    }
+    
+    // Adicionar pontos para milhares (apenas se necessário)
+    if (tempValue.length > 6) { // Mais de 999,99
+        let parts = tempValue.split(',');
+        let integerPart = parts[0];
+        let decimalPart = parts[1] || '';
+        
+        // Adicionar pontos para milhares
+        let formattedInteger = '';
+        for (let i = 0; i < integerPart.length; i++) {
+            if (i > 0 && (integerPart.length - i) % 3 === 0) {
+                formattedInteger += '.';
+            }
+            formattedInteger += integerPart[i];
+        }
+        
+        formattedValue = formattedInteger + (decimalPart ? ',' + decimalPart : '');
+    } else {
+        formattedValue = tempValue;
+    }
+    
+    return formattedValue;
+}
+
+/**
+ * Formatar preço para exibição no input (padrão brasileiro)
+ * @param {string|number} value - Valor a ser formatado
+ * @returns {string} - Valor formatado
+ */
+function formatPriceForInput(value) {
+    // Converter para string e remover formatação existente
+    let cleanValue = String(value).replace(/[^\d,]/g, '');
+    
+    // Substituir vírgula por ponto para cálculos
+    cleanValue = cleanValue.replace(',', '.');
+    
+    // Converter para número
+    let number = parseFloat(cleanValue);
+    
+    if (isNaN(number)) {
+        return '';
+    }
+    
+    // Formatar para o padrão brasileiro (pontos para milhares, vírgula para decimais)
+    return number.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+/**
+ * Converter preço formatado para número (para envio do formulário)
+ * @param {string} formattedPrice - Preço formatado
+ * @returns {number} - Número para envio
+ */
+function convertFormattedPriceToNumber(formattedPrice) {
+    // Remover pontos e substituir vírgula por ponto
+    const cleanValue = formattedPrice.replace(/\./g, '').replace(',', '.');
+    return parseFloat(cleanValue) || 0;
+}
+
 // ===== EXPORTAR FUNÇÕES PARA USO GLOBAL =====
 window.AdminPanel = {
     showNotification,
     showLoading,
     toggleTheme,
     validateField,
-    clearFieldError
+    clearFieldError,
+    formatPriceForInput,
+    formatPriceRealTime,
+    convertFormattedPriceToNumber
 };
