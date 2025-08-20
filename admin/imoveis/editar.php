@@ -64,10 +64,20 @@ $fotos_imovel = fetchAll("
 // Processar formulário
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        // Log para debug
+        error_log("DEBUG: Iniciando processamento do formulário POST");
+        error_log("DEBUG: Dados POST recebidos: " . print_r($_POST, true));
+        
         // Validar dados obrigatórios
         $titulo = cleanInput($_POST['titulo']);
         $descricao = cleanInput($_POST['descricao']);
-        $preco = (float)$_POST['preco'];
+        
+        // Converter preço do formato brasileiro para número
+        $preco = convertBrazilianPriceToNumber($_POST['preco']);
+        
+        error_log("DEBUG: Preço original: " . $_POST['preco']);
+        error_log("DEBUG: Preço convertido: " . $preco);
+        
         $tipo_id = (int)$_POST['tipo_id'];
         $localizacao_id = (int)$_POST['localizacao_id'];
         
@@ -94,8 +104,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'data_atualizacao' => date('Y-m-d H:i:s')
         ];
         
+        error_log("DEBUG: Dados do imóvel preparados: " . print_r($dados_imovel, true));
+        
         // Atualizar imóvel
+        error_log("DEBUG: Executando UPDATE na tabela imoveis");
+        error_log("DEBUG: WHERE id = " . $imovel_id);
+        
         $resultado = update("imoveis", $dados_imovel, "id = ?", [$imovel_id]);
+        
+        error_log("DEBUG: Resultado do UPDATE: " . ($resultado ? 'SUCESSO' : 'FALHA'));
+        
+        // Verificar se realmente foi atualizado
+        if ($resultado) {
+            $stmt = $pdo->prepare("SELECT preco FROM imoveis WHERE id = ?");
+            $stmt->execute([$imovel_id]);
+            $preco_verificacao = $stmt->fetchColumn();
+            error_log("DEBUG: Preço após UPDATE no banco: " . $preco_verificacao);
+            
+            if ($preco_verificacao == $preco) {
+                error_log("DEBUG: ✅ SUCESSO - Preço foi atualizado corretamente no banco");
+            } else {
+                error_log("DEBUG: ❌ ERRO - Preço não foi atualizado no banco. Esperado: $preco, Encontrado: $preco_verificacao");
+            }
+        }
         
         if ($resultado) {
             // Atualizar características
@@ -194,8 +225,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
             
-            // Atualizar dados na variável para exibição
-            $imovel = array_merge($imovel, $dados_imovel);
+            // IMPORTANTE: Recarregar dados do banco para garantir sincronização
+            $imovel_atualizado = fetch("
+                SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, u.nome as corretor_nome 
+                FROM imoveis i 
+                LEFT JOIN tipos_imovel t ON i.tipo_id = t.id 
+                LEFT JOIN localizacoes l ON i.localizacao_id = l.id 
+                LEFT JOIN usuarios u ON i.usuario_id = u.id 
+                WHERE i.id = ?
+            ", [$imovel_id]);
+            
+            if ($imovel_atualizado) {
+                $imovel = $imovel_atualizado;
+                error_log("DEBUG: Dados recarregados do banco: " . print_r($imovel, true));
+            } else {
+                error_log("DEBUG: ERRO ao recarregar dados do banco");
+            }
+            
             $caracteristicas_selecionadas = isset($_POST['caracteristicas']) ? $_POST['caracteristicas'] : [];
             
             // Buscar fotos atualizadas
@@ -203,7 +249,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 SELECT * FROM fotos_imovel WHERE imovel_id = ? ORDER BY ordem
             ", [$imovel_id]);
             
-            $success_message = "Imóvel atualizado com sucesso!";
+            // Redirecionar para o dashboard após salvar com sucesso
+            header('Location: ../index.php?success=imovel_atualizado');
+            exit;
         } else {
             throw new Exception('Erro ao atualizar imóvel no banco de dados.');
         }
@@ -304,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <a href="index.php" class="btn btn-sm btn-secondary">
                                 <i class="fas fa-arrow-left me-1"></i>Voltar
                             </a>
-                            <a href="../../pages/imovel-detalhes.php?id=<?php echo $imovel_id; ?>" 
+                            <a href="<?php echo getPagePath('imovel', ['id' => $imovel_id]); ?>" 
                                class="btn btn-sm btn-info" target="_blank">
                                 <i class="fas fa-eye me-1"></i>Ver no Site
                             </a>
@@ -391,7 +439,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <span class="input-group-text">R$</span>
                                         <input type="text" class="form-control" id="preco" name="preco" 
                                                placeholder="0,00" 
-                                               value="<?php echo htmlspecialchars($imovel['preco']); ?>" required>
+                                               value="<?php echo htmlspecialchars(formatPrice($imovel['preco'])); ?>" required>
                                     </div>
                                     <div class="invalid-feedback">Preço é obrigatório</div>
                                 </div>
@@ -565,12 +613,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 
                                 <div class="col-12">
-                                    <div class="fotos-grid" id="fotosGrid">
+                                    <div class="fotos-grid" id="fotosGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
                                         <?php foreach ($fotos_imovel as $foto): ?>
-                                            <div class="foto-item" data-foto-id="<?php echo $foto['id']; ?>" data-ordem="<?php echo $foto['ordem']; ?>">
-                                                <div class="foto-card">
-                                                    <div class="foto-header">
-                                                        <span class="ordem-badge"><?php echo $foto['ordem']; ?></span>
+                                            <div class="foto-item" data-foto-id="<?php echo $foto['id']; ?>" data-ordem="<?php echo $foto['ordem']; ?>" style="cursor: move;">
+                                                <div class="foto-card" style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white;">
+                                                    <div class="foto-header" style="background: #f8f9fa; padding: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                                        <span class="ordem-badge" style="background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;"><?php echo $foto['ordem']; ?></span>
                                                         <div class="foto-actions">
                                                             <button type="button" class="btn btn-sm btn-outline-primary foto-principal" 
                                                                     data-foto-id="<?php echo $foto['id']; ?>" 
@@ -585,12 +633,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div class="foto-image">
+                                                    <div class="foto-image" style="height: 150px; overflow: hidden;">
                                                         <img src="../../uploads/imoveis/<?php echo $imovel_id; ?>/<?php echo $foto['arquivo']; ?>" 
                                                              alt="Foto do imóvel" 
-                                                             class="img-fluid">
+                                                             class="img-fluid" style="width: 100%; height: 100%; object-fit: cover;">
                                                     </div>
-                                                    <div class="foto-footer">
+                                                    <div class="foto-footer" style="padding: 8px; background: #f8f9fa;">
                                                         <small class="text-muted"><?php echo $foto['arquivo']; ?></small>
                                                         <input type="hidden" name="ordem_fotos[]" value="<?php echo $foto['id']; ?>:<?php echo $foto['ordem']; ?>">
                                                     </div>
@@ -957,6 +1005,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Converter o preço formatado para número antes de enviar
                         const numericValue = window.AdminPanel.convertFormattedPriceToNumber(precoInput.value);
                         precoInput.value = numericValue;
+                        
+                        // Log para debug
+                        console.log('DEBUG: Preço original:', precoInput.value);
+                        console.log('DEBUG: Preço convertido:', numericValue);
                     }
                 });
             }

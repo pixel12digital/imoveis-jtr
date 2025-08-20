@@ -163,24 +163,35 @@ foreach ($caracteristicas as $carac) {
                 </div>
             </div>
 
-            <!-- Miniaturas -->
-            <div class="row mt-3">
+            <!-- Miniaturas com Barra de Rolagem -->
+            <div class="row mt-4">
                 <div class="col-12">
-                    <div class="thumbnails d-flex gap-2 overflow-auto">
-                        <?php foreach ($fotos as $index => $foto): ?>
-                            <?php if (imageExists($foto['arquivo'])): ?>
-                                <img src="<?php echo getUploadPath($foto['arquivo']); ?>" 
-                                     class="thumbnail-img" alt="Miniatura <?php echo $index + 1; ?>"
-                                     style="width: 100px; height: 70px; object-fit: cover; cursor: pointer;"
-                                     onclick="openLightbox(<?php echo $index; ?>)">
-                            <?php else: ?>
-                                <div class="thumbnail-placeholder d-flex align-items-center justify-content-center" 
-                                     style="width: 100px; height: 70px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); cursor: pointer; border-radius: 8px;"
-                                     onclick="openLightbox(<?php echo $index; ?>)">
-                                    <i class="fas fa-image text-muted"></i>
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-images me-2"></i>
+                        Galeria de Fotos (<?php echo count($fotos); ?> imagens)
+                    </h6>
+                    <div class="thumbnails-container">
+                        <div class="thumbnails-scroll">
+                            <?php foreach ($fotos as $index => $foto): ?>
+                                <div class="thumbnail-item" onclick="openLightbox(<?php echo $index; ?>)">
+                                    <?php if (imageExists($foto['arquivo'])): ?>
+                                        <img src="<?php echo getUploadPath($foto['arquivo']); ?>" 
+                                             class="thumbnail-img" alt="Miniatura <?php echo $index + 1; ?>">
+                                    <?php else: ?>
+                                        <div class="thumbnail-placeholder">
+                                            <i class="fas fa-image"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="thumbnail-overlay">
+                                        <span class="thumbnail-number"><?php echo $index + 1; ?></span>
+                                    </div>
                                 </div>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="scroll-indicator">
+                            <i class="fas fa-arrows-alt-h text-muted"></i>
+                            <small class="text-muted ms-2">Arraste para ver mais fotos</small>
+                        </div>
                     </div>
                 </div>
             </div>

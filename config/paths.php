@@ -181,7 +181,7 @@ function imageExists($filename) {
 function getPagePath($page, $params = []) {
     // Mapear páginas para arquivos corretos
     $page_mapping = [
-        'imovel' => 'imovel-detalhes',
+        'imovel' => 'imovel',
         'home' => 'home',
         'imoveis' => 'imoveis',
         'sobre' => 'sobre',
@@ -195,16 +195,16 @@ function getPagePath($page, $params = []) {
     // Obter o nome correto da página
     $correct_page = $page_mapping[$page] ?? $page;
     
-    // Se estamos em uma subpágina (pages/, admin/), usar caminho direto
+    // Se estamos em uma subpágina (pages/, admin/), usar caminho relativo
     $script_name = $_SERVER['SCRIPT_NAME'];
     if (strpos($script_name, '/pages/') !== false || strpos($script_name, '/admin/') !== false) {
         // Estamos em uma subpágina, usar caminho relativo
         if ($page === 'imovel') {
-            // Para imóveis, usar caminho direto para imovel-detalhes.php
+            // Para imóveis, voltar dois níveis e usar o sistema de roteamento
             $query = http_build_query($params);
-            $url = 'imovel-detalhes.php';
+            $url = '../../index.php?page=' . $correct_page;
             if (!empty($query)) {
-                $url .= '?' . $query;
+                $url .= '&' . $query;
             }
             return $url;
         } else {

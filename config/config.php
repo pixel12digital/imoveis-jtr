@@ -54,6 +54,16 @@ function formatPrice($price) {
     return 'R$ ' . number_format($price, 2, ',', '.');
 }
 
+// Função para converter preço do formato brasileiro para número
+function convertBrazilianPriceToNumber($formattedPrice) {
+    // Remover "R$ " se existir
+    $cleanValue = str_replace('R$ ', '', $formattedPrice);
+    // Remover pontos e substituir vírgula por ponto
+    $cleanValue = str_replace('.', '', $cleanValue);
+    $cleanValue = str_replace(',', '.', $cleanValue);
+    return (float)$cleanValue;
+}
+
 // Função para formatar data
 function formatDate($date) {
     return date('d/m/Y', strtotime($date));

@@ -109,19 +109,35 @@ function insert($table, $data) {
 function update($table, $data, $where, $params = []) {
     global $pdo;
     
-    $set_clause = [];
-    $set_params = [];
-    
-    foreach (array_keys($data) as $column) {
-        $set_clause[] = "{$column} = ?";
-        $set_params[] = $data[$column];
+    try {
+        $set_clause = [];
+        $set_params = [];
+        
+        foreach (array_keys($data) as $column) {
+            $set_clause[] = "{$column} = ?";
+            $set_params[] = $data[$column];
+        }
+        
+        $sql = "UPDATE {$table} SET " . implode(', ', $set_clause) . " WHERE {$where}";
+        error_log("DEBUG: SQL UPDATE: " . $sql);
+        error_log("DEBUG: Parâmetros: " . print_r(array_merge($set_params, $params), true));
+        
+        $stmt = $pdo->prepare($sql);
+        $all_params = array_merge($set_params, $params);
+        $result = $stmt->execute($all_params);
+        
+        if ($result) {
+            $rows_affected = $stmt->rowCount();
+            error_log("DEBUG: Linhas afetadas: " . $rows_affected);
+            return $rows_affected > 0; // Retorna true apenas se houve alteração
+        } else {
+            error_log("DEBUG: Erro na execução do UPDATE");
+            return false;
+        }
+    } catch (Exception $e) {
+        error_log("Erro na função update: " . $e->getMessage());
+        return false;
     }
-    
-    $sql = "UPDATE {$table} SET " . implode(', ', $set_clause) . " WHERE {$where}";
-    $stmt = $pdo->prepare($sql);
-    
-    $all_params = array_merge($set_params, $params);
-    return $stmt->execute($all_params);
 }
 
 // Função para deletar dados

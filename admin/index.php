@@ -67,6 +67,22 @@ include 'includes/header.php';
     </div>
 <?php endif; ?>
 
+<?php if (isset($_GET['success']) && $_GET['success'] === 'imovel_atualizado'): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>Sucesso!</strong> Imóvel atualizado com sucesso!
+        <div class="mt-2">
+            <a href="imoveis/" class="btn btn-primary btn-sm me-2">
+                <i class="fas fa-home me-1"></i>Ver Todos os Imóveis
+            </a>
+            <a href="imoveis/adicionar.php" class="btn btn-success btn-sm">
+                <i class="fas fa-plus me-1"></i>Adicionar Novo Imóvel
+            </a>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Dashboard</h1>
     <div class="btn-toolbar mb-2 mb-md-0">
@@ -205,7 +221,7 @@ include 'includes/header.php';
                                                class="btn btn-sm btn-outline-primary" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="../imovel-detalhes.php?id=<?php echo $imovel['id']; ?>" 
+                                            <a href="<?php echo getPagePath('imovel', ['id' => $imovel['id']]); ?>" 
                                                target="_blank" class="btn btn-sm btn-outline-info" title="Visualizar">
                                                 <i class="fas fa-eye"></i>
                                             </a>

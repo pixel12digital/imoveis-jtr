@@ -75,7 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("DEBUG FORM: Validando dados obrigatórios...");
             $titulo = cleanInput($_POST['titulo']);
             $descricao = cleanInput($_POST['descricao']);
-            $preco = (float)$_POST['preco'];
+            
+            // Converter preço do formato brasileiro para número
+            $preco = convertBrazilianPriceToNumber($_POST['preco']);
+            
             $tipo_id = (int)$_POST['tipo_id'];
             $localizacao_id = (int)$_POST['localizacao_id'];
             
