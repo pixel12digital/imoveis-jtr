@@ -118,6 +118,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $preco_locacao = null;
         if (isset($_POST['negocio_locacao']) && !empty($_POST['preco_locacao'])) {
             $preco_locacao = convertBrazilianPriceToNumber($_POST['preco_locacao']);
+            error_log("DEBUG: Preço de locação original: " . $_POST['preco_locacao']);
+            error_log("DEBUG: Preço de locação convertido: " . $preco_locacao);
         }
 
         // Condições de locação (se aplicável)
@@ -582,7 +584,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="input-group">
                                             <span class="input-group-text">R$</span>
                                             <input type="text" class="form-control" id="preco_locacao" name="preco_locacao" 
-                                                   placeholder="0,00" value="<?php echo $imovel['preco_locacao'] ? number_format($imovel['preco_locacao'], 2, ',', '.') : ''; ?>">
+                                                   placeholder="0,00" value="<?php echo $imovel['preco_locacao'] ? formatPrice($imovel['preco_locacao']) : ''; ?>">
                                         </div>
                                         <div class="form-text">
                                             <small class="text-muted">
@@ -1156,6 +1158,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         precoLocacaoInput.required = false;
                         precoLocacaoInput.value = '';
                         condicoesLocacaoInput.value = '';
+                    }
+                });
+            }
+
+            // Máscara e formatação para preço de locação (mesma lógica do preço de venda)
+            if (precoLocacaoInput) {
+                // Aplicar máscara de formatação brasileira
+                precoLocacaoInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    
+                    if (value.length > 0) {
+                        // Converter para número e formatar
+                        const numericValue = parseInt(value);
+                        const formattedValue = (numericValue / 100).toFixed(2);
+                        const formattedPrice = formattedValue.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                        e.target.value = formattedPrice;
+                    }
+                });
+
+                // Formatar ao perder o foco (blur)
+                precoLocacaoInput.addEventListener('blur', function() {
+                    if (this.value) {
+                        let value = this.value.replace(/\D/g, '');
+                        if (value) {
+                            const numericValue = parseInt(value);
+                            const formattedValue = (numericValue / 100).toFixed(2);
+                            const formattedPrice = formattedValue.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                            this.value = formattedPrice;
+                        }
+                    }
+                });
+
+                // Formatar ao ganhar o foco (focus)
+                precoLocacaoInput.addEventListener('focus', function() {
+                    if (this.value) {
+                        // Converter formato brasileiro para número simples para edição
+                        let value = this.value.replace(/\./g, '').replace(',', '.');
+                        this.value = value;
                     }
                 });
             }

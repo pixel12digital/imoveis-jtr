@@ -44,7 +44,8 @@
                                     <select class="form-select" id="tipo_negocio" name="tipo_negocio">
                                         <option value="">Todos</option>
                                         <option value="venda">Venda</option>
-                                        <option value="aluguel">Aluguel</option>
+                                        <option value="locacao">Locação</option>
+                                        <option value="venda_locacao">Venda + Locação</option>
                                     </select>
                                 </div>
                                 
@@ -317,8 +318,27 @@
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                                <div class="property-price">
-                                    <span class="badge bg-primary fs-6"><?php echo formatPrice($property['preco']); ?></span>
+                                <!-- Preços e Tipo de Negócio -->
+                                <div class="property-price position-absolute top-0 end-0 m-2">
+                                    <?php if ($property['tipo_negocio'] == 'venda' || $property['tipo_negocio'] == 'venda_locacao'): ?>
+                                        <span class="badge bg-primary fs-6 mb-1 d-block"><?php echo formatPrice($property['preco']); ?></span>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($property['tipo_negocio'] == 'locacao' || $property['tipo_negocio'] == 'venda_locacao'): ?>
+                                        <span class="badge bg-success fs-6 mb-1 d-block"><?php echo formatPrice($property['preco_locacao']); ?>/mês</span>
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <!-- Badges do Tipo de Negócio -->
+                                <div class="position-absolute top-0 start-0 m-2">
+                                    <?php if ($property['tipo_negocio'] == 'venda_locacao'): ?>
+                                        <span class="badge bg-primary me-1">Venda</span>
+                                        <span class="badge bg-success">Locação</span>
+                                    <?php elseif ($property['tipo_negocio'] == 'locacao'): ?>
+                                        <span class="badge bg-success">Locação</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-primary">Venda</span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="card-body">

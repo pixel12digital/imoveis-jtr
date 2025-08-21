@@ -8,6 +8,8 @@ $page_title = 'Imóveis Disponíveis - ' . SITE_NAME;
 $tipo_id = isset($_GET['tipo_imovel']) ? (int)$_GET['tipo_imovel'] : (isset($_GET['tipo']) ? (int)$_GET['tipo'] : 0);
 $preco_min = isset($_GET['preco_min']) ? (float)$_GET['preco_min'] : 0;
 $preco_max = isset($_GET['preco_max']) ? (float)$_GET['preco_max'] : 0;
+$preco_locacao_min = isset($_GET['preco_locacao_min']) ? (float)$_GET['preco_locacao_min'] : 0;
+$preco_locacao_max = isset($_GET['preco_locacao_max']) ? (float)$_GET['preco_locacao_max'] : 0;
 $area_min = isset($_GET['area_min']) ? (float)$_GET['area_min'] : 0;
 $area_max = isset($_GET['area_max']) ? (float)$_GET['area_max'] : 0;
 $quartos = isset($_GET['quartos']) ? (int)$_GET['quartos'] : 0;
@@ -57,6 +59,17 @@ if ($preco_min > 0) {
 if ($preco_max > 0) {
     $sql .= " AND i.preco <= ?";
     $params[] = $preco_max;
+}
+
+// Filtros de preço de locação
+if ($preco_locacao_min > 0) {
+    $sql .= " AND i.preco_locacao >= ?";
+    $params[] = $preco_locacao_min;
+}
+
+if ($preco_locacao_max > 0) {
+    $sql .= " AND i.preco_locacao <= ?";
+    $params[] = $preco_locacao_max;
 }
 
 if ($area_min > 0) {
@@ -155,12 +168,20 @@ $caracteristicas_list = $pdo->query("SELECT * FROM caracteristicas WHERE ativo =
                         <div class="mb-3">
                             <label class="form-label fw-bold">Tipo de Negócio</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipo_negocio" value="compra" id="compra" <?= $tipo_negocio === 'compra' ? 'checked' : '' ?>>
-                                <label class="form-check-label" for="compra">Compra</label>
+                                <input class="form-check-input" type="radio" name="tipo_negocio" value="" id="todos" <?= empty($tipo_negocio) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="todos">Todos</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipo_negocio" value="aluguel" id="aluguel" <?= $tipo_negocio === 'aluguel' ? 'checked' : '' ?>>
-                                <label class="form-check-label" for="aluguel">Aluguel</label>
+                                <input class="form-check-input" type="radio" name="tipo_negocio" value="venda" id="venda" <?= $tipo_negocio === 'venda' ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="venda">Venda</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_negocio" value="locacao" id="locacao" <?= $tipo_negocio === 'locacao' ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="locacao">Locação</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_negocio" value="venda_locacao" id="venda_locacao" <?= $tipo_negocio === 'venda_locacao' ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="venda_locacao">Venda + Locação</label>
                             </div>
                         </div>
 
@@ -179,13 +200,26 @@ $caracteristicas_list = $pdo->query("SELECT * FROM caracteristicas WHERE ativo =
 
                         <!-- Faixa de Preço -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Faixa de Preço</label>
+                            <label class="form-label fw-bold">Faixa de Preço (Venda)</label>
                             <div class="row">
                                 <div class="col-6">
                                     <input type="number" name="preco_min" class="form-control" placeholder="Min" value="<?= $preco_min ?>" min="0" step="1000">
                                 </div>
                                 <div class="col-6">
                                     <input type="number" name="preco_max" class="form-control" placeholder="Max" value="<?= $preco_max ?>" min="0" step="1000">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Faixa de Preço de Locação -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Faixa de Preço (Locação)</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="number" name="preco_locacao_min" class="form-control" placeholder="Min" value="<?= isset($_GET['preco_locacao_min']) ? (float)$_GET['preco_locacao_min'] : '' ?>" min="0" step="100">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="preco_locacao_max" class="form-control" placeholder="Max" value="<?= isset($_GET['preco_locacao_max']) ? (float)$_GET['preco_locacao_max'] : '' ?>" min="0" step="100">
                                 </div>
                             </div>
                         </div>
@@ -333,8 +367,10 @@ $caracteristicas_list = $pdo->query("SELECT * FROM caracteristicas WHERE ativo =
                 }
                 $filtros_ativos[] = "Tipo: " . $tipo_nome;
             }
-            if ($preco_min > 0) $filtros_ativos[] = "Preço mínimo: " . formatPrice($preco_min);
-            if ($preco_max > 0) $filtros_ativos[] = "Preço máximo: " . formatPrice($preco_max);
+            if ($preco_min > 0) $filtros_ativos[] = "Preço mínimo (Venda): " . formatPrice($preco_min);
+if ($preco_max > 0) $filtros_ativos[] = "Preço máximo (Venda): " . formatPrice($preco_max);
+if ($preco_locacao_min > 0) $filtros_ativos[] = "Preço mínimo (Locação): " . formatPrice($preco_locacao_min);
+if ($preco_locacao_max > 0) $filtros_ativos[] = "Preço máximo (Locação): " . formatPrice($preco_locacao_max);
             if ($area_min > 0) $filtros_ativos[] = "Área mínima: " . $area_min . "m²";
             if ($area_max > 0) $filtros_ativos[] = "Área máxima: " . $area_max . "m²";
             if ($quartos > 0) $filtros_ativos[] = "Quartos: " . $quartos . "+";
@@ -342,7 +378,23 @@ $caracteristicas_list = $pdo->query("SELECT * FROM caracteristicas WHERE ativo =
             if ($vagas > 0) $filtros_ativos[] = "Vagas: " . $vagas . "+";
             if (!empty($cidade)) $filtros_ativos[] = "Cidade: " . $cidade;
             if (!empty($bairro)) $filtros_ativos[] = "Bairro: " . $bairro;
-            if (!empty($tipo_negocio)) $filtros_ativos[] = "Negócio: " . ucfirst($tipo_negocio);
+            if (!empty($tipo_negocio)) {
+    $negocio_label = '';
+    switch($tipo_negocio) {
+        case 'venda':
+            $negocio_label = 'Venda';
+            break;
+        case 'locacao':
+            $negocio_label = 'Locação';
+            break;
+        case 'venda_locacao':
+            $negocio_label = 'Venda + Locação';
+            break;
+        default:
+            $negocio_label = ucfirst($tipo_negocio);
+    }
+    $filtros_ativos[] = "Negócio: " . $negocio_label;
+}
             if ($destaque) $filtros_ativos[] = "Em destaque";
             if (!empty($busca)) $filtros_ativos[] = "Busca: " . $busca;
             
@@ -453,9 +505,40 @@ $caracteristicas_list = $pdo->query("SELECT * FROM caracteristicas WHERE ativo =
                                     </div>
                                     
                                     <div class="mt-auto">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="h5 text-primary mb-0"><?= formatPrice($imovel['preco']) ?></span>
-                                            <small class="text-muted"><?= formatDate($imovel['data_criacao']) ?></small>
+                                        <!-- Preços e Tipo de Negócio -->
+                                        <div class="mb-3">
+                                            <!-- Preço de Venda -->
+                                            <?php if ($imovel['tipo_negocio'] == 'venda' || $imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="h5 text-primary mb-0"><?= formatPrice($imovel['preco']) ?></span>
+                                                    <small class="text-muted"><?= formatDate($imovel['data_criacao']) ?></small>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <span class="badge bg-primary">Venda</span>
+                                                </div>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Preço de Locação -->
+                                            <?php if ($imovel['tipo_negocio'] == 'locacao' || $imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                                <?php if ($imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                                    <hr class="my-2">
+                                                <?php endif; ?>
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <span class="h5 text-success mb-0"><?= formatPrice($imovel['preco_locacao']) ?>/mês</span>
+                                                    <small class="text-muted"><?= formatDate($imovel['data_criacao']) ?></small>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <span class="badge bg-success">Locação</span>
+                                                </div>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Badge Combinado -->
+                                            <?php if ($imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                                <div class="mb-2">
+                                                    <span class="badge bg-primary me-1">Venda</span>
+                                                    <span class="badge bg-success">Locação</span>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
                                         
                                         <div class="d-grid gap-2">
@@ -463,18 +546,18 @@ $caracteristicas_list = $pdo->query("SELECT * FROM caracteristicas WHERE ativo =
                                                class="btn btn-primary btn-sm">
                                                 <i class="fas fa-eye"></i> Ver Detalhes
                                             </a>
-                                                                                         <button class="btn btn-outline-success btn-sm" 
+                                            <button class="btn btn-outline-success btn-sm" 
                                                     onclick="contatarCorretor('JTR Imóveis', '<?= PHONE_VENDA ?>')">
                                                 <i class="fas fa-phone"></i> Falar com Corretor
                                             </button>
-                                             <button class="btn btn-outline-info btn-sm" 
-                                                     onclick="adicionarAoComparador(<?= $imovel['id'] ?>)">
-                                                 <i class="fas fa-balance-scale"></i> Comparar
-                                             </button>
-                                             <a href="<?= getPagePath('historico-precos', ['imovel_id' => $imovel['id']]) ?>" 
-                                                class="btn btn-outline-warning btn-sm">
-                                                 <i class="fas fa-chart-line"></i> Histórico
-                                             </a>
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    onclick="adicionarAoComparador(<?= $imovel['id'] ?>)">
+                                                <i class="fas fa-balance-scale"></i> Comparar
+                                            </button>
+                                            <a href="<?= getPagePath('historico-precos', ['imovel_id' => $imovel['id']]) ?>" 
+                                               class="btn btn-outline-warning btn-sm">
+                                                <i class="fas fa-chart-line"></i> Histórico
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

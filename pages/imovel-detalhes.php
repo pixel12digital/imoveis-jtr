@@ -224,10 +224,36 @@ foreach ($caracteristicas as $carac) {
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-md-6">
-                                <h2 class="text-primary mb-2"><?php echo formatPrice($imovel['preco']); ?></h2>
-                                <p class="text-muted mb-0">
-                                    <i class="fas fa-tag me-2"></i><?php echo $imovel['tipo_nome']; ?>
-                                </p>
+                                <!-- Preço de Venda -->
+                                <?php if ($imovel['tipo_negocio'] == 'venda' || $imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                    <h2 class="text-primary mb-2"><?php echo formatPrice($imovel['preco']); ?></h2>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-tag me-2"></i><?php echo $imovel['tipo_nome']; ?> - Venda
+                                    </p>
+                                <?php endif; ?>
+                                
+                                <!-- Preço de Locação -->
+                                <?php if ($imovel['tipo_negocio'] == 'locacao' || $imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                    <?php if ($imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                        <hr class="my-2">
+                                    <?php endif; ?>
+                                    <h3 class="text-success mb-2"><?php echo formatPrice($imovel['preco_locacao']); ?>/mês</h3>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-key me-2"></i><?php echo $imovel['tipo_nome']; ?> - Locação
+                                    </p>
+                                <?php endif; ?>
+                                
+                                <!-- Badge do Tipo de Negócio -->
+                                <div class="mt-2">
+                                    <?php if ($imovel['tipo_negocio'] == 'venda_locacao'): ?>
+                                        <span class="badge bg-primary me-2">Venda</span>
+                                        <span class="badge bg-success">Locação</span>
+                                    <?php elseif ($imovel['tipo_negocio'] == 'locacao'): ?>
+                                        <span class="badge bg-success">Apenas Locação</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-primary">Apenas Venda</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="col-md-6 text-md-end">
                                 <div class="d-grid gap-2 d-md-block">
@@ -310,6 +336,24 @@ foreach ($caracteristicas as $carac) {
                         <?php endif; ?>
                     </div>
                 </div>
+
+                <!-- Condições de Locação -->
+                <?php if (($imovel['tipo_negocio'] == 'locacao' || $imovel['tipo_negocio'] == 'venda_locacao') && $imovel['condicoes_locacao']): ?>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-key text-success me-2"></i>Condições de Locação
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <p class="mb-0"><?php echo nl2br($imovel['condicoes_locacao']); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <!-- Características Detalhadas -->
                 <?php if ($caracteristicas_por_categoria): ?>
