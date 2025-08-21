@@ -93,11 +93,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("DEBUG SESSION: admin_id = " . ($_SESSION['admin_id'] ?? 'NÃO DEFINIDO'));
         error_log("DEBUG SESSION: admin_nome = " . ($_SESSION['admin_nome'] ?? 'NÃO DEFINIDO'));
         
+        // Determinar tipo de negócio baseado nas seleções
+        $tipo_negocio = 'venda'; // padrão
+        if (isset($_POST['negocio_venda']) && isset($_POST['negocio_locacao'])) {
+            $tipo_negocio = 'venda_locacao';
+        } elseif (isset($_POST['negocio_locacao'])) {
+            $tipo_negocio = 'locacao';
+        }
+
+        // Preço de locação (se aplicável)
+        $preco_locacao = null;
+        if (isset($_POST['negocio_locacao']) && !empty($_POST['preco_locacao'])) {
+            $preco_locacao = convertBrazilianPriceToNumber($_POST['preco_locacao']);
+        }
+
+        // Condições de locação (se aplicável)
+        $condicoes_locacao = null;
+        if (isset($_POST['negocio_locacao']) && !empty($_POST['condicoes_locacao'])) {
+            $condicoes_locacao = cleanInput($_POST['condicoes_locacao']);
+        }
+
         // Preparar dados do imóvel
         $dados_imovel = [
             'titulo' => $titulo,
             'descricao' => $descricao,
             'preco' => $preco,
+            'preco_locacao' => $preco_locacao,
+            'condicoes_locacao' => $condicoes_locacao,
+            'tipo_negocio' => $tipo_negocio,
             'tipo_id' => $tipo_id,
             'localizacao_id' => $localizacao_id,
             'usuario_id' => $_SESSION['admin_id'] ?? 1, // Fallback para usuário 1 se não houver sessão
@@ -475,6 +498,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
+                            <!-- Tipo de Negócio -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-handshake me-2"></i>Tipo de Negócio
+                                    </h6>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Disponível para:</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="negocio_venda" name="negocio_venda" value="1" checked>
+                                        <label class="form-check-label" for="negocio_venda">
+                                            <i class="fas fa-tag text-success me-1"></i>Venda
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="negocio_locacao" name="negocio_locacao" value="1">
+                                        <label class="form-check-label" for="negocio_locacao">
+                                            <i class="fas fa-key text-primary me-1"></i>Locação
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div id="preco_locacao_container" style="display: none;">
+                                        <label for="preco_locacao" class="form-label">Preço de Locação (Mensal)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">R$</span>
+                                            <input type="text" class="form-control" id="preco_locacao" name="preco_locacao" 
+                                                   placeholder="0,00">
+                                        </div>
+                                        <div class="form-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle"></i> 
+                                                Preço mensal para locação
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Condições de Locação -->
+                            <div class="row mb-4" id="condicoes_locacao_container" style="display: none;">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-key text-primary me-2"></i>Condições de Locação
+                                    </h6>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="condicoes_locacao" class="form-label">Condições e Considerações para Locação</label>
+                                    <textarea class="form-control" id="condicoes_locacao" name="condicoes_locacao" rows="3" 
+                                              placeholder="Ex: Aceita pets, fiador, caução de 3 meses, IPTU incluído, condomínio incluído..."><?php echo htmlspecialchars($_POST['condicoes_locacao'] ?? ''); ?></textarea>
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i> 
+                                            Descreva condições especiais, aceitação de pets, fiador, caução, etc.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row mb-4">
                                 <div class="col-md-6">
                                     <label for="status" class="form-label">Status</label>
@@ -846,6 +932,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 console.error('DEBUG: Função isValidFileType NÃO encontrada!');
             }
             
+            // Controle dos campos de locação
+            const negocioLocacaoCheckbox = document.getElementById('negocio_locacao');
+            const precoLocacaoContainer = document.getElementById('preco_locacao_container');
+            const condicoesLocacaoContainer = document.getElementById('condicoes_locacao_container');
+            const precoLocacaoInput = document.getElementById('preco_locacao');
+            const condicoesLocacaoInput = document.getElementById('condicoes_locacao');
+
+            if (negocioLocacaoCheckbox && precoLocacaoContainer && condicoesLocacaoContainer) {
+                negocioLocacaoCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        precoLocacaoContainer.style.display = 'block';
+                        condicoesLocacaoContainer.style.display = 'block';
+                        precoLocacaoInput.required = true;
+                    } else {
+                        precoLocacaoContainer.style.display = 'none';
+                        condicoesLocacaoContainer.style.display = 'none';
+                        precoLocacaoInput.required = false;
+                        precoLocacaoInput.value = '';
+                        condicoesLocacaoInput.value = '';
+                    }
+                });
+            }
+
             // Máscara para CEP
             const cepInput = document.getElementById('cep');
             if (cepInput) {
