@@ -275,11 +275,11 @@
             <?php
             // Buscar imóveis em destaque
             $featured_properties = fetchAll("
-                SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, f.arquivo as foto_principal
+                SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, 
+                       (SELECT arquivo FROM fotos_imovel WHERE imovel_id = i.id ORDER BY ordem ASC LIMIT 1) as foto_principal
                 FROM imoveis i
                 LEFT JOIN tipos_imovel t ON i.tipo_id = t.id
                 LEFT JOIN localizacoes l ON i.localizacao_id = l.id
-                LEFT JOIN fotos_imovel f ON i.id = f.imovel_id AND f.principal = 1
                 WHERE i.destaque = 1 AND i.status = 'disponivel'
                 ORDER BY i.data_criacao DESC
                 LIMIT 6

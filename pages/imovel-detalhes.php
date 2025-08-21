@@ -46,11 +46,11 @@ $caracteristicas = fetchAll("
 
 // Buscar imóveis similares
 $imoveis_similares = fetchAll("
-    SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, f.arquivo as foto_principal
+    SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, 
+           (SELECT arquivo FROM fotos_imovel WHERE imovel_id = i.id ORDER BY ordem ASC LIMIT 1) as foto_principal
     FROM imoveis i
     LEFT JOIN tipos_imovel t ON i.tipo_id = t.id
     LEFT JOIN localizacoes l ON i.localizacao_id = l.id
-    LEFT JOIN fotos_imovel f ON i.id = f.imovel_id AND f.principal = 1
     WHERE i.id != ? AND i.status = 'disponivel' 
     AND (i.tipo_id = ? OR l.cidade = ? OR i.preco BETWEEN ? AND ?)
     ORDER BY RAND()

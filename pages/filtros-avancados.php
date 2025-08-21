@@ -284,8 +284,8 @@ $cidades = $pdo->query("SELECT DISTINCT cidade FROM localizacoes ORDER BY cidade
                                 <div class="card h-100 shadow-sm hover-shadow">
                                     <div class="position-relative">
                                         <?php
-                                        // Buscar foto principal
-                                        $stmt = $pdo->prepare("SELECT arquivo FROM fotos_imovel WHERE imovel_id = ? AND principal = 1 LIMIT 1");
+                                        // Buscar primeira foto por ordem
+                                        $stmt = $pdo->prepare("SELECT arquivo FROM fotos_imovel WHERE imovel_id = ? ORDER BY ordem ASC LIMIT 1");
                                         $stmt->execute([$imovel['id']]);
                                         $foto = $stmt->fetch();
                                         ?>
