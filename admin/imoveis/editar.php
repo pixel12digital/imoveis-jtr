@@ -17,6 +17,27 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
+/**
+ * FUNÇÃO GLOBAL DE RENUMERAÇÃO AUTOMÁTICA
+ * Esta função funciona para QUALQUER imóvel, garantindo que as fotos
+ * sejam sempre numeradas sequencialmente de 1 a N
+ */
+function renumerarFotosAutomaticamente($imovel_id) {
+    // Buscar todas as fotos do imóvel ordenadas pela ordem atual
+    $fotos_restantes = fetchAll("SELECT id FROM fotos_imovel WHERE imovel_id = ? ORDER BY ordem", [$imovel_id]);
+    
+    // Renumerar sequencialmente de 1 a N
+    foreach ($fotos_restantes as $index => $foto) {
+        $nova_ordem = $index + 1;
+        query("UPDATE fotos_imovel SET ordem = ? WHERE id = ?", [$nova_ordem, $foto['id']]);
+    }
+    
+    // Log para auditoria
+    error_log("AUTO-RENUMERAÇÃO: Imóvel ID {$imovel_id} - Fotos reordenadas de 1 a " . count($fotos_restantes));
+    
+    return count($fotos_restantes);
+}
+
 $success_message = '';
 $error_message = '';
 
@@ -158,6 +179,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         query("DELETE FROM fotos_imovel WHERE id = ?", [$foto_id]);
                     }
                 }
+                
+                // SOLUÇÃO DEFINITIVA: Reordenar as fotos restantes após a exclusão
+                // Esta função funciona para QUALQUER imóvel, não apenas o ID 6
+                renumerarFotosAutomaticamente($imovel_id);
+            }
+            
+            // Processar reordenação de fotos existentes
+            if (isset($_POST['ordem_fotos']) && is_array($_POST['ordem_fotos'])) {
+                foreach ($_POST['ordem_fotos'] as $ordem_foto) {
+                    if (strpos($ordem_foto, ':') !== false) {
+                        list($foto_id, $nova_ordem) = explode(':', $ordem_foto);
+                        if (is_numeric($foto_id) && is_numeric($nova_ordem)) {
+                            query("UPDATE fotos_imovel SET ordem = ? WHERE id = ? AND imovel_id = ?", 
+                                  [(int)$nova_ordem, (int)$foto_id, $imovel_id]);
+                        }
+                    }
+                }
             }
             
             // Processar upload de novas fotos
@@ -248,6 +286,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fotos_imovel = fetchAll("
                 SELECT * FROM fotos_imovel WHERE imovel_id = ? ORDER BY ordem
             ", [$imovel_id]);
+            
+            // Verificar se é apenas uma atualização de ordem
+            if (isset($_POST['apenas_ordem']) && $_POST['apenas_ordem'] == '1') {
+                // Apenas recarregar a página com as ordens atualizadas
+                header("Location: editar.php?id={$imovel_id}&success=ordem_atualizada");
+                exit;
+            }
             
             // Redirecionar para o dashboard após salvar com sucesso
             header('Location: ../index.php?success=imovel_atualizado');
@@ -397,6 +442,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php if ($success_message): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($success_message); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['success']) && $_GET['success'] === 'ordem_atualizada'): ?>
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <i class="fas fa-sort me-2"></i>Ordem das fotos atualizada com sucesso!
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
@@ -618,7 +670,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <div class="foto-item" data-foto-id="<?php echo $foto['id']; ?>" data-ordem="<?php echo $foto['ordem']; ?>" style="cursor: move;">
                                                 <div class="foto-card" style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white;">
                                                     <div class="foto-header" style="background: #f8f9fa; padding: 8px; display: flex; justify-content: space-between; align-items: center;">
-                                                        <span class="ordem-badge" style="background: #007bff; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;"><?php echo $foto['ordem']; ?></span>
                                                         <div class="foto-actions">
                                                             <button type="button" class="btn btn-sm btn-outline-primary foto-principal" 
                                                                     data-foto-id="<?php echo $foto['id']; ?>" 
@@ -841,12 +892,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     const ordem = index + 1;
                     item.setAttribute('data-ordem', ordem);
                     
-                    // Atualizar badge de ordem
-                    const badge = item.querySelector('.ordem-badge');
-                    if (badge) {
-                        badge.textContent = ordem;
-                    }
-                    
                     // Atualizar input hidden
                     const input = item.querySelector('input[name="ordem_fotos[]"]');
                     if (input) {
@@ -861,10 +906,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             btnPrincipal.disabled = true;
                             btnPrincipal.classList.add('btn-success');
                             btnPrincipal.classList.remove('btn-outline-primary');
+                            btnPrincipal.title = 'Esta é a foto principal';
                         } else {
                             btnPrincipal.disabled = false;
                             btnPrincipal.classList.remove('btn-success');
                             btnPrincipal.classList.add('btn-outline-primary');
+                            btnPrincipal.title = 'Definir como foto principal';
                         }
                     }
                     
@@ -925,12 +972,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     novaOrdem.push({ id: fotoId, ordem: ordem });
                 });
                 
-                // Aqui você pode enviar via AJAX ou incluir no formulário
-                console.log('Nova ordem:', novaOrdem);
-                this.showNotification('Ordem salva com sucesso!', 'success');
-                
                 // Atualizar inputs hidden do formulário
                 this.updateFormInputs(novaOrdem);
+                
+                // Mostrar notificação
+                this.showNotification('Ordem salva! As alterações serão aplicadas quando você salvar o imóvel.', 'success');
+                
+                // Opcional: Submeter o formulário automaticamente após um pequeno delay
+                setTimeout(() => {
+                    const form = document.querySelector('form');
+                    if (form) {
+                        // Criar um input hidden temporário para indicar que é apenas uma atualização de ordem
+                        const inputTemp = document.createElement('input');
+                        inputTemp.type = 'hidden';
+                        inputTemp.name = 'apenas_ordem';
+                        inputTemp.value = '1';
+                        form.appendChild(inputTemp);
+                        
+                        // Submeter o formulário
+                        form.submit();
+                    }
+                }, 1500);
             }
             
             updateFormInputs(novaOrdem) {
