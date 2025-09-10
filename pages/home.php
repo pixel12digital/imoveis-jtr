@@ -277,7 +277,7 @@
             // Buscar imóveis em destaque
             $featured_properties = fetchAll("
                 SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, 
-                       (SELECT arquivo FROM fotos_imovel WHERE imovel_id = i.id ORDER BY ordem ASC LIMIT 1) as foto_principal
+                       CONCAT('imoveis/', i.id, '/', (SELECT arquivo FROM fotos_imovel WHERE imovel_id = i.id ORDER BY ordem ASC LIMIT 1)) as foto_principal
                 FROM imoveis i
                 LEFT JOIN tipos_imovel t ON i.tipo_id = t.id
                 LEFT JOIN localizacoes l ON i.localizacao_id = l.id

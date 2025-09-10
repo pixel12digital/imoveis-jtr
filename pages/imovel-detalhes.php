@@ -47,7 +47,7 @@ $caracteristicas = fetchAll("
 // Buscar imóveis similares
 $imoveis_similares = fetchAll("
     SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, 
-           (SELECT arquivo FROM fotos_imovel WHERE imovel_id = i.id ORDER BY ordem ASC LIMIT 1) as foto_principal
+           CONCAT('imoveis/', i.id, '/', (SELECT arquivo FROM fotos_imovel WHERE imovel_id = i.id ORDER BY ordem ASC LIMIT 1)) as foto_principal
     FROM imoveis i
     LEFT JOIN tipos_imovel t ON i.tipo_id = t.id
     LEFT JOIN localizacoes l ON i.localizacao_id = l.id
@@ -126,8 +126,12 @@ foreach ($caracteristicas as $carac) {
                         <div class="carousel-inner">
                             <?php foreach ($fotos as $index => $foto): ?>
                                 <div class="carousel-item <?php echo $index === 0 ? 'active' : ''; ?>">
-                                    <?php if (imageExists($foto['arquivo'])): ?>
-                                        <img src="<?php echo getUploadPath($foto['arquivo']); ?>" 
+                                    <?php 
+                                    $foto_path = 'imoveis/' . $imovel_id . '/' . $foto['arquivo'];
+                                    $image_url = getUploadPath($foto_path);
+                                    if ($image_url): 
+                                    ?>
+                                        <img src="<?php echo htmlspecialchars($image_url); ?>" 
                                              class="d-block w-100" alt="<?php echo $foto['legenda'] ?: $imovel['titulo']; ?>"
                                              style="height: 500px; object-fit: cover;">
                                     <?php else: ?>

@@ -25,7 +25,8 @@ $destaque = isset($_GET['destaque']) ? (bool)$_GET['destaque'] : false;
 $busca = isset($_GET['busca']) ? cleanInput($_GET['busca']) : '';
 
 // Construir query SQL
-$sql = "SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, l.estado 
+$sql = "SELECT i.*, t.nome as tipo_nome, l.cidade, l.bairro, l.estado,
+               CONCAT('imoveis/', i.id, '/', (SELECT arquivo FROM fotos_imovel WHERE imovel_id = i.id ORDER BY ordem ASC LIMIT 1)) as foto_principal
         FROM imoveis i 
         INNER JOIN tipos_imovel t ON i.tipo_id = t.id 
         INNER JOIN localizacoes l ON i.localizacao_id = l.id 
@@ -430,17 +431,23 @@ if ($preco_locacao_max > 0) $filtros_ativos[] = "Preço máximo (Locação): " .
                         <div class="col-lg-4 col-md-6 mb-4">
                             <div class="card h-100 shadow-sm hover-shadow">
                                 <div class="position-relative">
-                                    <?php
-                                    // Buscar primeira foto por ordem
-                                    $stmt = $pdo->prepare("SELECT arquivo FROM fotos_imovel WHERE imovel_id = ? ORDER BY ordem ASC LIMIT 1");
-                                    $stmt->execute([$imovel['id']]);
-                                    $foto = $stmt->fetch();
-                                    ?>
-                                    
-                                    <?php if ($foto && imageExists($foto['arquivo'])): ?>
-                                        <img src="<?= getUploadPath($foto['arquivo']) ?>" 
-                                             class="card-img-top" alt="<?= htmlspecialchars($imovel['titulo']) ?>"
-                                             style="height: 200px; object-fit: cover;">
+                                    <?php if ($imovel['foto_principal']): ?>
+                                        <?php 
+                                        $image_url = getUploadPath($imovel['foto_principal']);
+                                        if ($image_url): 
+                                        ?>
+                                            <img src="<?php echo htmlspecialchars($image_url); ?>" 
+                                                 class="card-img-top" alt="<?php echo htmlspecialchars($imovel['titulo']); ?>"
+                                                 style="height: 200px; object-fit: cover;">
+                                        <?php else: ?>
+                                            <div class="no-image-placeholder d-flex align-items-center justify-content-center" 
+                                                 style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px 8px 0 0;">
+                                                <div class="text-center">
+                                                    <i class="fas fa-home fa-3x text-muted mb-2"></i>
+                                                    <p class="text-muted small mb-0">Foto não disponível</p>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <div class="no-image-placeholder d-flex align-items-center justify-content-center" 
                                              style="height: 200px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px 8px 0 0;">
