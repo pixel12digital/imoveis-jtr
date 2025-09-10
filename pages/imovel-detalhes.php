@@ -178,12 +178,16 @@ foreach ($caracteristicas as $carac) {
                         <div class="thumbnails-scroll">
                             <?php foreach ($fotos as $index => $foto): ?>
                                 <div class="thumbnail-item" onclick="openLightbox(<?php echo $index; ?>)">
-                                    <?php if (imageExists($foto['arquivo'])): ?>
-                                        <img src="<?php echo getUploadPath($foto['arquivo']); ?>" 
+                                    <?php 
+                                    $foto_path = 'imoveis/' . $imovel_id . '/' . $foto['arquivo'];
+                                    $image_url = getUploadPath($foto_path);
+                                    if ($image_url): 
+                                    ?>
+                                        <img src="<?php echo htmlspecialchars($image_url); ?>" 
                                              class="thumbnail-img" alt="Miniatura <?php echo $index + 1; ?>">
                                     <?php else: ?>
                                         <div class="thumbnail-placeholder">
-                                            <i class="fas fa-image"></i>
+                                            <i class="fas fa-image text-muted"></i>
                                         </div>
                                     <?php endif; ?>
                                     <div class="thumbnail-overlay">
