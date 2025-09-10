@@ -361,6 +361,9 @@ function aplicarFiltroRapido(campo, valor) {
         
         // Mostrar notificação
         showNotification(`Filtro aplicado: ${getNomeFiltro(campo, valor)}`, 'success');
+        
+        // Buscar imóveis via AJAX
+        buscarImoveisAjax();
     }
 }
 
@@ -374,6 +377,11 @@ function limparFiltros() {
         select.value = '';
     });
     
+    // Limpar campos hidden
+    form.querySelectorAll('input[type="hidden"]').forEach(input => {
+        input.value = '';
+    });
+    
     // Resetar botões de filtros rápidos
     document.querySelectorAll('.quick-filters-section .btn-outline-primary, .quick-filters-section .btn-primary').forEach(btn => {
         btn.classList.remove('btn-primary');
@@ -381,6 +389,70 @@ function limparFiltros() {
     });
     
     showNotification('Filtros limpos com sucesso', 'info');
+    
+    // Buscar imóveis via AJAX
+    buscarImoveisAjax();
+}
+
+// Buscar imóveis via AJAX
+function buscarImoveisAjax() {
+    const form = document.getElementById('quickSearchForm');
+    if (!form) return;
+    
+    // Mostrar loading
+    const resultsContainer = document.getElementById('imoveisFiltrados');
+    const countBadge = document.querySelector('.filter-results .badge');
+    const titleElement = document.querySelector('.filter-results h2');
+    
+    if (resultsContainer) {
+        resultsContainer.innerHTML = '<div class="col-12 text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i><p class="mt-2">Buscando imóveis...</p></div>';
+    }
+    
+    // Coletar dados do formulário
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    
+    for (let [key, value] of formData.entries()) {
+        if (value) {
+            params.append(key, value);
+        }
+    }
+    
+    // Fazer requisição AJAX
+    fetch('ajax_buscar_imoveis.php?' + params.toString())
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Atualizar contador
+                if (countBadge) {
+                    countBadge.textContent = data.count + ' imóveis encontrados';
+                }
+                
+                // Atualizar título
+                if (titleElement) {
+                    titleElement.textContent = data.count > 0 ? 'Resultados da Busca' : 'Nenhum Resultado';
+                }
+                
+                // Atualizar HTML dos resultados
+                if (resultsContainer) {
+                    resultsContainer.innerHTML = data.html;
+                }
+                
+                // Scroll suave para os resultados
+                document.querySelector('.filter-results').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+                
+            } else {
+                console.error('Erro na busca:', data.error);
+                showNotification('Erro ao buscar imóveis', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição:', error);
+            showNotification('Erro ao buscar imóveis', 'error');
+        });
 }
 
 // Obter nome amigável do filtro
@@ -388,7 +460,8 @@ function getNomeFiltro(campo, valor) {
     const nomes = {
         'tipo_negocio': {
             'venda': 'Para Venda',
-            'aluguel': 'Para Alugar'
+            'locacao': 'Para Alugar',
+            'venda_locacao': 'Venda + Locação'
         },
         'preco_max': {
             '100000': 'Até R$ 100.000',
@@ -475,21 +548,13 @@ function initHomeFilters() {
     
     // Adicionar listener para envio do formulário
     form.addEventListener('submit', function(e) {
-        // Salvar filtros antes de enviar
+        e.preventDefault(); // Prevenir submit tradicional
+        
+        // Salvar filtros antes de buscar
         salvarFiltrosHome();
         
-        // Adicionar loading ao botão
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Buscando...';
-        
-        // Reabilitar botão após redirecionamento
-        setTimeout(() => {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-        }, 2000);
+        // Buscar imóveis via AJAX
+        buscarImoveisAjax();
     });
 }
 
