@@ -266,7 +266,7 @@ foreach ($caracteristicas as $carac) {
                             <div class="col-md-6 text-md-end">
                                 <div class="d-grid gap-2 d-md-block">
                                     <button class="btn btn-primary btn-lg" onclick="openContactModal()">
-                                        <i class="fas fa-phone me-2"></i>Falar com Corretor
+                                        <i class="fas fa-phone me-2"></i>Falar com um Especialista
                                     </button>
                                     <button class="btn btn-outline-primary" onclick="JTRImoveis.toggleFavorite(<?php echo $imovel['id']; ?>)">
                                         <i class="far fa-heart me-2"></i>Favorito
@@ -462,13 +462,13 @@ foreach ($caracteristicas as $carac) {
                 <!-- Informações do Corretor -->
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Corretor Responsável</h5>
+                        <h5 class="mb-0"><i class="fas fa-user-tie me-2"></i>Especialista Responsável</h5>
                     </div>
                     <div class="card-body text-center">
                         <div class="corretor-info">
                             <i class="fas fa-user-circle fa-4x text-primary mb-3"></i>
                             <h6 class="mb-1"><?php echo $imovel['corretor_nome']; ?></h6>
-                            <p class="text-muted mb-2">Corretor de Imóveis</p>
+                            <p class="text-muted mb-2">Especialista em Imóveis</p>
                             <div class="d-grid gap-2">
                                 <a href="mailto:<?php echo $imovel['corretor_email']; ?>" class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-envelope me-2"></i>E-mail
@@ -565,14 +565,14 @@ foreach ($caracteristicas as $carac) {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="contactModalLabel">Falar com Corretor</h5>
+                <h5 class="modal-title" id="contactModalLabel">Falar com um Especialista</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="text-center mb-3">
                     <i class="fas fa-user-circle fa-4x text-primary"></i>
                     <h6 class="mt-2"><?php echo $imovel['corretor_nome']; ?></h6>
-                    <p class="text-muted">Corretor Responsável</p>
+                    <p class="text-muted">Especialista Responsável</p>
                 </div>
                 <div class="d-grid gap-2">
                     <a href="mailto:<?php echo $imovel['corretor_email']; ?>" class="btn btn-primary">

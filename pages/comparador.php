@@ -309,7 +309,7 @@ if (!empty($imoveis_comparacao)) {
                     
                     <!-- Corretor -->
                     <tr class="table-light">
-                        <td colspan="<?= count($imoveis_comparacao) + 1 ?>" class="fw-bold">Corretor Responsável</td>
+                        <td colspan="<?= count($imoveis_comparacao) + 1 ?>" class="fw-bold">Especialista Responsável</td>
                     </tr>
                     
                     <tr>

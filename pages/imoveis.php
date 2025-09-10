@@ -555,7 +555,7 @@ if ($preco_locacao_max > 0) $filtros_ativos[] = "Preço máximo (Locação): " .
                                             </a>
                                             <button class="btn btn-outline-success btn-sm" 
                                                     onclick="contatarCorretor('JTR Imóveis', '<?= PHONE_VENDA ?>')">
-                                                <i class="fas fa-phone"></i> Falar com Corretor
+                                                <i class="fas fa-phone"></i> Falar com um Especialista
                                             </button>
                                             <button class="btn btn-outline-info btn-sm" 
                                                     onclick="adicionarAoComparador(<?= $imovel['id'] ?>)">
@@ -673,9 +673,9 @@ function exportarResultados() {
     mostrarNotificacao('Funcionalidade de exportação em desenvolvimento', 'info');
 }
 
-// Contatar corretor
+// Contatar especialista
 function contatarCorretor(nome, telefone) {
-    const mensagem = `Olá! Gostaria de saber mais sobre um imóvel. Corretor: ${nome}`;
+    const mensagem = `Olá! Gostaria de saber mais sobre um imóvel. Especialista: ${nome}`;
     const whatsappUrl = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(mensagem)}`;
     window.open(whatsappUrl, '_blank');
 }

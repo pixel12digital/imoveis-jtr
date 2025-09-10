@@ -240,7 +240,7 @@ $total_clientes = fetch("SELECT COUNT(*) as total FROM clientes")['total'];
                             </div>
                         </div>
                         <h5 class="card-title">Carlos Oliveira</h5>
-                        <p class="text-muted mb-2">Corretor Sênior</p>
+                        <p class="text-muted mb-2">Especialista Sênior</p>
                         <p class="card-text small">
                             Corretor credenciado com mais de 10 anos de experiência, especialista em 
                             imóveis residenciais e comerciais.
@@ -353,7 +353,7 @@ $total_clientes = fetch("SELECT COUNT(*) as total FROM clientes")['total'];
                     </div>
                     <h5>CRECI Ativo</h5>
                     <p class="text-muted small">
-                        Corretor de Imóveis registrado e ativo no Conselho Regional
+                            Especialista em Imóveis registrado e ativo no Conselho Regional
                     </p>
                 </div>
             </div>
