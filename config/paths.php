@@ -167,10 +167,13 @@ function getUploadPath($filename) {
         }
     }
     
-    // Fallback para verificação local
-    $absolutePath = getAbsolutePath('uploads/' . ltrim($filename, '/'));
-    if (file_exists($absolutePath)) {
-        return getRelativePath('uploads/' . ltrim($filename, '/'));
+    // Fallback para verificação local (apenas se não estiver usando Hostinger)
+    // Verificar se estamos em ambiente web (não CLI)
+    if (php_sapi_name() !== 'cli' && isset($_SERVER['HTTP_HOST'])) {
+        $absolutePath = getAbsolutePath('uploads/' . ltrim($filename, '/'));
+        if (file_exists($absolutePath)) {
+            return getRelativePath('uploads/' . ltrim($filename, '/'));
+        }
     }
     
     return false; // Retorna false se a imagem não existir

@@ -20,11 +20,11 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 $success_message = '';
 $error_message = '';
 
-// Debug: Verificar se as funções estão carregadas
-error_log("DEBUG LOAD: Verificando carregamento das funções...");
-error_log("DEBUG LOAD: fetchAll existe? " . (function_exists('fetchAll') ? 'SIM' : 'NÃO'));
-error_log("DEBUG LOAD: insert existe? " . (function_exists('insert') ? 'SIM' : 'NÃO'));
-error_log("DEBUG LOAD: cleanInput existe? " . (function_exists('cleanInput') ? 'SIM' : 'NÃO'));
+    // Verificar se as funções estão carregadas
+    error_log("DEBUG LOAD: Verificando carregamento das funções...");
+    error_log("DEBUG LOAD: fetchAll existe? " . (function_exists('fetchAll') ? 'SIM' : 'NÃO'));
+    error_log("DEBUG LOAD: insert existe? " . (function_exists('insert') ? 'SIM' : 'NÃO'));
+    error_log("DEBUG LOAD: cleanInput existe? " . (function_exists('cleanInput') ? 'SIM' : 'NÃO'));
 
 // Buscar dados para os selects
 $tipos_imovel = fetchAll("SELECT * FROM tipos_imovel ORDER BY nome");
@@ -730,11 +730,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
                             
-                            <!-- Debug do formulário -->
-                            <div class="mt-3 p-3 bg-light rounded">
-                                <h6>🔍 Debug do Formulário:</h6>
-                                <div id="formDebug">Aguardando envio...</div>
-                            </div>
+
                         </form>
                     </div>
                 </div>
@@ -816,122 +812,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Dropzone JS - COMENTADO PARA TESTE -->
     <!-- <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script> -->
     
-    <!-- Debug: Verificar se o admin.js foi carregado -->
-    <script>
-        console.log('DEBUG: Verificando carregamento do admin.js...');
-        console.log('DEBUG: typeof setupFileUploads:', typeof setupFileUploads);
-        console.log('DEBUG: typeof handleFileUpload:', typeof handleFileUpload);
-        console.log('DEBUG: typeof isValidFileType:', typeof isValidFileType);
-    </script>
+
     
     <script>
         // Configuração específica para esta página
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DEBUG: Página de adicionar imóvel carregada');
-            
             // Verificar se o admin.js foi carregado
             if (typeof isValidFileType === 'function') {
-                console.log('DEBUG: Função isValidFileType encontrada');
-                
-                // Testar validação WebP
-                const testFile = new File([''], 'test.webp', { type: 'image/webp' });
-                const result = isValidFileType(testFile);
-                console.log('DEBUG: Teste WebP - Resultado:', result);
-                
-                // Verificar extensões permitidas
-                console.log('DEBUG: Extensões permitidas na função:', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                
-                // Configurar upload de arquivos manualmente
-                console.log('DEBUG: Configurando upload de arquivos...');
+                // Configurar upload de arquivos
                 if (typeof setupFileUploads === 'function') {
                     setupFileUploads();
-                    console.log('DEBUG: setupFileUploads executado');
-                } else {
-                    console.error('DEBUG: setupFileUploads NÃO encontrada!');
                 }
                 
-                // Monitorar envio do formulário
+                // Configuração do formulário
                 const form = document.querySelector('form');
                 const btnSubmit = document.getElementById('btnSubmit');
-                const formDebug = document.getElementById('formDebug');
                 
                 if (form && btnSubmit) {
-                    console.log('DEBUG: Formulário encontrado:', form);
-                    console.log('DEBUG: Botão submit encontrado:', btnSubmit);
-                    
-                    // Monitorar clique no botão
-                    btnSubmit.addEventListener('click', function(e) {
-                        console.log('DEBUG: Botão submit clicado');
-                        formDebug.innerHTML = '<span class="text-info">Botão clicado - processando...</span>';
-                    });
-                    
-                    // Monitorar envio do formulário
+                    // Validação do formulário
                     form.addEventListener('submit', function(e) {
-                        console.log('DEBUG: Evento submit disparado');
-                        
-                        // Capturar FormData no momento do envio
-                        const formData = new FormData(form);
-                        console.log('DEBUG: FormData criado');
-                        
-                        // Verificar campos individuais
-                        const titulo = form.querySelector('#titulo').value;
-                        const descricao = form.querySelector('#descricao').value;
-                        const preco = form.querySelector('#preco').value;
-                        const tipo_id = form.querySelector('#tipo_id').value;
-                        const localizacao_id = form.querySelector('#localizacao_id').value;
-                        
-                        console.log('DEBUG: Campos capturados:');
-                        console.log('- Título:', titulo);
-                        console.log('- Descrição:', descricao);
-                        console.log('- Preço:', preco);
-                        console.log('- Tipo ID:', tipo_id);
-                        console.log('- Localização ID:', localizacao_id);
-                        
-                        // Verificar se há arquivos selecionados
-                        const fileInput = form.querySelector('input[type="file"]');
-                        if (fileInput && fileInput.files.length > 0) {
-                            console.log('DEBUG: Arquivos para upload:', fileInput.files.length);
-                            Array.from(fileInput.files).forEach((file, index) => {
-                                console.log(`DEBUG: Arquivo ${index + 1}:`, file.name, file.size, file.type);
-                            });
-                        } else {
-                            console.log('DEBUG: Nenhum arquivo selecionado');
-                        }
-                        
                         // Verificar se todos os campos obrigatórios estão preenchidos
                         const requiredFields = form.querySelectorAll('[required]');
                         let allRequiredFilled = true;
                         
                         requiredFields.forEach(field => {
                             if (!field.value.trim()) {
-                                console.error('DEBUG: Campo obrigatório vazio:', field.name);
+                                console.error('Campo obrigatório vazio:', field.name);
                                 allRequiredFilled = false;
                             }
                         });
                         
                         if (!allRequiredFilled) {
-                            console.error('DEBUG: Formulário não pode ser enviado - campos obrigatórios vazios');
+                            console.error('Formulário não pode ser enviado - campos obrigatórios vazios');
                             e.preventDefault();
-                            formDebug.innerHTML = '<span class="text-danger">Erro: Campos obrigatórios não preenchidos!</span>';
                             return;
                         }
-                        
-                        console.log('DEBUG: Formulário válido - enviando...');
-                        formDebug.innerHTML = '<span class="text-success">Formulário enviado - redirecionando...</span>';
                     });
-                    
-                    // Monitorar mudanças nos campos
-                    const requiredFields = form.querySelectorAll('[required]');
-                    requiredFields.forEach(field => {
-                        field.addEventListener('change', function() {
-                            console.log('DEBUG: Campo alterado:', field.name, '=', field.value);
-                        });
-                    });
-                } else {
-                    console.error('DEBUG: Formulário ou botão não encontrado!');
                 }
-            } else {
-                console.error('DEBUG: Função isValidFileType NÃO encontrada!');
             }
             
             // Controle dos campos de locação
