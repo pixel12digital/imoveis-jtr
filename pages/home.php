@@ -407,41 +407,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET)) {
     </div>
 </section>
 
-<!-- Estatísticas -->
-<section class="stats-section py-5 bg-light">
-    <div class="container">
-        <div class="row text-center">
-            <div class="col-md-3 mb-4">
-                <div class="stat-item">
-                    <i class="fas fa-building fa-3x text-primary mb-3"></i>
-                    <h3 class="fw-bold text-primary">850+</h3>
-                    <p class="text-muted">APARTAMENTOS</p>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="stat-item">
-                    <i class="fas fa-home fa-3x text-primary mb-3"></i>
-                    <h3 class="fw-bold text-primary">950+</h3>
-                    <p class="text-muted">CHÁCARAS</p>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="stat-item">
-                    <i class="fas fa-map fa-3x text-primary mb-3"></i>
-                    <h3 class="fw-bold text-primary">120+</h3>
-                    <p class="text-muted">TERRENOS</p>
-                </div>
-            </div>
-            <div class="col-md-3 mb-4">
-                <div class="stat-item">
-                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                    <h3 class="fw-bold text-primary">5K+</h3>
-                    <p class="text-muted">CLIENTES SATISFEITOS</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- Resultados dos Filtros -->
 <section class="filter-results py-5 bg-light">
