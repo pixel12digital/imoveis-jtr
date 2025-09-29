@@ -28,18 +28,29 @@ $total_clientes = fetch("SELECT COUNT(*) as total FROM clientes")['total'];
                 <div class="history-content">
                     <h2 class="mb-4">Nossa História</h2>
                     <p class="lead mb-4">
-                        A <?php echo SITE_NAME; ?> é uma incorporadora e construtora com anos de experiência 
-                        no mercado imobiliário, especializada em desenvolver e comercializar imóveis próprios.
+                        <strong>Construtora Rossi e Rossi e JTR Incorporadora em São José dos Campos</strong>
                     </p>
                     <p class="mb-4">
-                        Com uma trajetória sólida e comprometida com a qualidade, desenvolvemos projetos 
-                        residenciais e comerciais que atendem às necessidades de nossos clientes, sempre 
-                        priorizando a excelência na construção e o atendimento personalizado.
+                        Desde 1991, a JTR transforma projetos em realidade, ajudando famílias a conquistarem a casa própria e empresários a encontrarem o espaço ideal para seus negócios.
                     </p>
-                    <p class="mb-0">
-                        Nossa empresa possui um portfólio diversificado de imóveis próprios para venda e 
-                        locação, garantindo aos nossos clientes transparência, seriedade e a segurança 
-                        de lidar diretamente com a incorporadora.
+                    <p class="mb-4">
+                        Somos uma empresa familiar, com mais de 30 anos de experiência em construção e incorporação de imóveis residenciais e comerciais, sempre com qualidade, segurança e valorização.
+                    </p>
+                    <p class="mb-4">
+                        <strong>Residenciais:</strong> casas e apartamentos planejados para oferecer conforto, bem-estar e a realização do sonho da casa própria.<br>
+                        <strong>Comerciais:</strong> empreendimentos que unem localização estratégica e estrutura ideal para o crescimento dos negócios.
+                    </p>
+                    <div class="mt-4">
+                        <h5 class="mb-3">Por que escolher a JTR?</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tradição e credibilidade desde 1991</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Empreendimentos que valorizam ao longo do tempo</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Atendimento próximo e personalizado</li>
+                            <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Soluções para quem deseja morar, investir ou empreender</li>
+                        </ul>
+                    </div>
+                    <p class="mb-0 mt-4">
+                        Entre em contato e descubra como podemos ajudar você a conquistar seu imóvel residencial ou comercial.
                     </p>
                 </div>
             </div>
@@ -71,9 +82,9 @@ $total_clientes = fetch("SELECT COUNT(*) as total FROM clientes")['total'];
                         </div>
                         <h4 class="card-title">Nossa Missão</h4>
                         <p class="card-text">
-                            Desenvolver e construir imóveis de qualidade superior, oferecendo aos nossos 
-                            clientes a oportunidade de adquirir ou locar propriedades próprias com 
-                            transparência, seriedade e compromisso com a excelência.
+                            Transformar projetos em realidade, ajudando famílias a conquistarem a casa própria 
+                            e empresários a encontrarem o espaço ideal para seus negócios, sempre com qualidade, 
+                            segurança e valorização em cada empreendimento.
                         </p>
                     </div>
                 </div>
@@ -87,9 +98,9 @@ $total_clientes = fetch("SELECT COUNT(*) as total FROM clientes")['total'];
                         </div>
                         <h4 class="card-title">Nossa Visão</h4>
                         <p class="card-text">
-                            Ser reconhecida como uma das principais incorporadoras e construtoras da região, 
-                            referência em qualidade de construção e desenvolvimento de projetos imobiliários, 
-                            expandindo nossa atuação e portfólio de imóveis próprios.
+                            Continuar sendo referência em São José dos Campos como empresa familiar de tradição 
+                            e credibilidade, expandindo nossa atuação em empreendimentos residenciais e comerciais 
+                            que valorizam ao longo do tempo.
                         </p>
                     </div>
                 </div>
@@ -103,11 +114,11 @@ $total_clientes = fetch("SELECT COUNT(*) as total FROM clientes")['total'];
                         </div>
                         <h4 class="card-title">Nossos Valores</h4>
                         <ul class="list-unstyled text-start">
-                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Ética e Transparência</li>
-                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Compromisso com a Qualidade</li>
-                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Seriedade e Confiança</li>
-                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Inovação na Construção</li>
-                            <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Responsabilidade Social</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tradição e Credibilidade (desde 1991)</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Qualidade e Segurança na Construção</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Atendimento Próximo e Personalizado</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Valorização dos Empreendimentos</li>
+                            <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Compromisso com Famílias e Empresários</li>
                         </ul>
                     </div>
                 </div>
