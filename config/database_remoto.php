@@ -3,9 +3,9 @@
 // Use este arquivo quando quiser sempre usar o banco remoto
 
 // Configurações do banco de dados REMOTO (Hostinger)
-define('DB_HOST', 'auth-db1607.hstgr.io');
-define('DB_NAME', 'u342734079_jtrimoveis');
-define('DB_USER', 'u342734079_jtrimoveis');
+define('DB_HOST', 'auth-db791.hstgr.io');
+define('DB_NAME', 'u891304621_jtrimoveis');
+define('DB_USER', 'u891304621_jtrimoveis');
 define('DB_PASS', 'Los@ngo#081081');
 
 // Log para debug

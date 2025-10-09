@@ -31,3 +31,7 @@ SELECT '✅ Tabela localizacoes limpa com sucesso!' as resultado;
 
 
 
+
+
+
+
